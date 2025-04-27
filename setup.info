@@ -1,0 +1,73 @@
+// Package Manager - yarn
+yarn create next-app savart-pms-landing-page
+
+// Install and setup husky
+yarn add -D husky lint-staged
+npx husky-init && yarn
+
+// Commitlint
+yarn add -D @commitlint/{cli,config-conventional}
+# Add commit message linting to commit-msg hook
+echo "yarn commitlint --edit \$1" > .husky/commit-msg
+
+// Add prettier
+yarn add -D prettier eslint-config-prettier eslint-plugin-prettier
+
+// Sass
+yarn add -D sass
+
+// Add stylelint
+yarn add -D stylelint stylelint-config-standard stylelint-config-prettier yarn add -D stylelint-config-css-modules@latest stylelint-config-standard@latest stylelint-config-standard-scss@latest stylelint-high-performance-animation@latest stylelint-order@latest stylelint-scss@latest stylelint-selector-bem-pattern@latest
+
+// Tailwind and PostCSS
+yarn add -D tailwindcss@latest postcss@latest autoprefixer@latest
+yarn add -D @tailwindcss/postcss 
+// Conflict resolution
+yarn add stylelint@^14.0.0 --dev
+yarn add postcss@^8.4.29 --dev
+
+
+// Storybook
+yarn add --dev @storybook/nextjs
+npx storybook init
+#### Don't let storybook install experimental packages as this project uses a more stable framework - @storybook/nextjs. If installed accidentally, remove them by running:
+yarn remove @storybook/experimental-addon-test @storybook/experimental-nextjs-vite
+yarn remove @vitest/browser @vitest/coverage-v8
+// Install interactions for testing
+yarn add -D @storybook/addon-interactions
+yarn add --dev stylelint@^16.13.0
+
+// Conflict resolution
+yarn add --dev webpack@5.x typescript@5.7.x postcss@^8.4.29 stylelint@14.x
+
+
+// Tests
+yarn add -D jest @testing-library/react @testing-library/jest-dom jest-environment-jsdom @storybook/jest
+yarn add -D @types/jest ts-jest ts-node (// Installing ts-node as jest config file is written in ts.)
+yarn add -D @storybook/test-runner
+yarn add -D @playwright/test
+// Dependency for storybook test runner
+yarn playwright install 
+// Conflict resolution
+yarn add -D @testing-library/dom@^10.0.0
+yarn add -D webpack@^5.0.0
+
+// Font families
+yarn add @fontsource/instrument-sans @fontsource/familjen-grotesk
+
+// Axios
+yarn add axios
+// Conflict Resolution:
+yarn add --dev stylelint@^16.13.0
+
+// React Hot Toast
+
+TO DOs:
+Setup
+1. Add and configure axios for SSR (DONE)
+2. Add and configure storybook and jest for testing (DONE)
+
+Styles:
+1. Identify app font family and install it. (DONE)
+2. Update colors
+3. 
