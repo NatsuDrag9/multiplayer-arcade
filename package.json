@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "prepare": "husky install",
+    "prepare": "husky",
     "test-unit": "jest"
   },
   "dependencies": {
@@ -19,19 +19,32 @@
     "@commitlint/cli": "^19.8.0",
     "@commitlint/config-conventional": "^19.8.0",
     "@eslint/eslintrc": "^3",
-    "@tailwindcss/postcss": "^4",
+    "@tailwindcss/postcss": "^4.1.4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "add": "^2.0.6",
+    "autoprefixer": "^10.4.21",
     "eslint": "^9",
     "eslint-config-next": "15.3.1",
     "eslint-config-prettier": "^10.1.2",
     "eslint-plugin-prettier": "^5.2.6",
     "husky": "^9.1.7",
     "lint-staged": "^15.5.1",
+    "postcss": "^8.5.3",
     "prettier": "^3.5.3",
     "sass": "^1.87.0",
+    "stylelint": "^16.19.1",
+    "stylelint-config-css-modules": "^4.4.0",
+    "stylelint-config-prettier": "^9.0.5",
+    "stylelint-config-standard": "^38.0.0",
+    "stylelint-config-standard-scss": "^14.0.0",
+    "stylelint-high-performance-animation": "^1.11.0",
+    "stylelint-order": "^7.0.0",
+    "stylelint-scss": "^6.11.1",
+    "stylelint-selector-bem-pattern": "^4.0.1",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "yarn": "^1.22.22"
   }
 }
