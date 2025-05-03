@@ -1,7 +1,14 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
+import path from 'path';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  sassOptions: {
+    includePaths: [path.join(__dirname, 'src/styles')],
+    prependData: `
+      @use 'sass:color';
+      @use 'helpers' as *;
+    `,
+  },
 };
 
 export default nextConfig;
