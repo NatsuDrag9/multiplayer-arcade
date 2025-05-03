@@ -1,0 +1,36 @@
+// Breakpoints
+$breakpoint-xs: 0; // Extra small devices (portrait phones)
+$breakpoint-sm: 576px; // Small devices (landscape phones)
+$breakpoint-md: 768px; // Medium devices (tablets)
+$breakpoint-lg-one: 820px; // Tablet portrait
+$breakpoint-lg-two: 1080px; // Tablet landscape
+$breakpoint-xl: 1200px; // Extra large devices (large desktops)
+$breakpoint-xl-two: 1400px; // Extra large screens (ultra-wide or HD)
+$breakpoint-mobile: 450px; // For mobiles
+$breakpoint-mobile-two: 390px; // Form smaller mobiles
+
+// fonts
+$hero-large: 8rem;
+$hero: 4.8rem;
+$heading-one: 3.6rem;
+$heading-two: 2.8rem;
+$heading-three: 2.4rem;
+$heading-four: 2rem;
+
+// $heading-five: 2.3rem;
+// $heading-six: 1.9rem;
+$body-one: 1.6rem;
+$body-two: 1.4rem;
+$body-three: 1.2rem;
+$body-four: 0.8rem;
+
+// Custom variables
+$button-height-small: 4.5rem;
+$button-height-large-one: 7rem;
+$button-height-large-two: 6rem;
+$button-height-mobile-small: 3.8rem;
+$text-button-height-small: 2rem;
+$text-button-height-large: 2.5rem;
+
+// Form input default height
+$form-input-height-default: 4.5rem;

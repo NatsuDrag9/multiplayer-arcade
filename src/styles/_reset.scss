@@ -1,0 +1,72 @@
+/*
+  Josh's Custom CSS Reset
+  https://www.joshwcomeau.com/css/custom-css-reset/ # Do take a look at this article - pramod
+*/
+
+// Ensure padding and borders are included in the element's total width and height
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+*:focus {
+  outline: none;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+}
+
+// Ensure media elements are responsive and do not exceed their containers
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+// Ensure form elements inherit font settings from their parent elements
+input,
+button,
+textarea,
+select {
+  font: inherit;
+}
+
+// Ensure text within these elements doesn't overflow their containers
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  overflow-wrap: break-word;
+}
+
+// Use isolation to create a new stacking context, preventing styles from leaking between components
+#root {
+  isolation: isolate;
+}
+
+input[type='number'] {
+  // Remove spinner for Firefox
+
+  // Standard property
+  appearance: textfield;
+
+  // Remove spinner for Webkit browsers (Chrome, Safari, newer versions of Edge)
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    appearance: none;
+    margin: 0;
+  }
+}
