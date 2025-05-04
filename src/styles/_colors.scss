@@ -7,4 +7,11 @@
 // #define ILI9341_YELLOW  0xFFE0
 // #define ILI9341_WHITE   0xFFFF
 
-$color-white: rgba(255 255 255 /100%);
+$color-black: rgba(0 0 0 / 100%);
+$color-blue: rgba(0 0 255 / 100%);
+$color-red: rgba(255 0 0 / 100%);
+$color-green: rgba(0 255 0 / 100%);
+$color-cyan: rgba(0 255 255 / 100%);
+$color-magenta: rgba(255 0 255 / 100%);
+$color-yellow: rgba(255 255 0 / 100%);
+$color-white: rgba(255 255 255 / 100%);
