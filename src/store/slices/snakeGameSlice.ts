@@ -1,4 +1,4 @@
-import { SnakeGameState } from '@/defitions/storeTypes';
+import { SnakeGameState } from '@/definitions/storeTypes';
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState: SnakeGameState = {
