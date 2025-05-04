@@ -2,3 +2,51 @@ body,
 html {
   font-size: 10px;
 }
+
+body {
+  background-color: $color-background;
+}
+
+.title {
+  color: $color-white;
+  text-align: center;
+  font-weight: 700;
+}
+
+.sub-title {
+  color: $color-text-one;
+  text-align: center;
+  font-weight: 500;
+}
+
+.heading-one {
+  font-size: $heading-one;
+}
+
+.heading-two {
+  font-size: $heading-two;
+}
+
+.heading-three {
+  font-size: $heading-three;
+}
+
+.heading-four {
+  font-size: $heading-four;
+}
+
+.body-one {
+  font-size: $body-one;
+}
+
+.body-two {
+  font-size: $body-two;
+}
+
+.body-three {
+  font-size: $body-three;
+}
+
+.body-four {
+  font-size: $body-four;
+}

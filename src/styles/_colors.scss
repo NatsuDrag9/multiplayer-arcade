@@ -8,6 +8,7 @@
 // #define ILI9341_WHITE   0xFFFF
 
 $color-black: rgba(0 0 0 / 100%);
+$color-background: rgba(6 6 6 / 100%);
 $color-blue: rgba(0 0 255 / 100%);
 $color-red: rgba(255 0 0 / 100%);
 $color-green: rgba(0 255 0 / 100%);
@@ -15,3 +16,8 @@ $color-cyan: rgba(0 255 255 / 100%);
 $color-magenta: rgba(255 0 255 / 100%);
 $color-yellow: rgba(255 255 0 / 100%);
 $color-white: rgba(255 255 255 / 100%);
+$color-white-two: rgba(255 255 255 / 15%);
+$color-card-fill-default: rgba(10 17 22 / 100%);
+$color-card-bg: rgba(13 14 20 / 100%);
+$color-text-one: rgba(198 198 198 / 100%);
+$color-text-two: rgba(167 167 173 / 100%);
