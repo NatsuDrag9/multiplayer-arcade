@@ -1,0 +1,19 @@
+.pp-button {
+  @include disable-default-button-styles;
+
+  width: 3.5rem;
+  height: 3.5rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid $color-white-two;
+  border-radius: 0.6rem;
+  transition: transform ease 0.3s;
+  cursor: pointer;
+
+  &__image {
+    color: $color-text-two;
+  }
+
+  &:hover {
+    transform: scale(1.1);
+  }
+}
