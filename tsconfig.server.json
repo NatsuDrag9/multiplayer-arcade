@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "module": "commonjS",
+    "moduleResolution": "node",
+    "outDir": "dist",
+    "noEmit": false,
+    "isolatedModules": false,
+    "target": "ES2020",
+    "esModuleInterop": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "ts-node": {
+    "require": ["tsconfig-paths/register"]
+  },
+  "include": ["src/server/**/*"],
+  "exclude": ["node_modules", ".next", "dist"]
+}

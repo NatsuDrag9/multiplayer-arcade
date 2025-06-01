@@ -64,10 +64,24 @@ yarn add --dev stylelint@^16.13.0
 
 TO DOs:
 Setup
-1. Add and configure axios for SSR (DONE)
-2. Add and configure storybook and jest for testing (DONE)
+1. Add and configure axios for SSR
+2. Add and configure storybook and jest for testing
 
 Styles:
-1. Identify app font family and install it. (DONE)
+1. Identify app font family and install it.
 2. Update colors
 3. 
+
+// Server side packages - 
+// Express, ws, cors and helmet (security middleware for express)
+yarn add express ws cors helmet
+yarn add -D typescript @types/express @types/ws @types/cors @types/node ts-node ts-node-dev concurrently
+
+// UUID
+yarn add uuid
+
+// Binary Protocol
+yarn add @msgpack/msgpack
+
+// tsconfig-paths to use relative paths
+yarn add -D tsconfig-paths

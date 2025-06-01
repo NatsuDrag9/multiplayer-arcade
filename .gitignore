@@ -19,6 +19,8 @@
 
 # production
 /build
+*_old.ts
+*_old.tsx
 
 # misc
 .DS_Store
