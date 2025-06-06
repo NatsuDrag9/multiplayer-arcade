@@ -2,7 +2,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/definitions/storeTypes';
-import { SnakeGame } from '../../../lib/game-engine/SnakeGame';
+import { SnakeGame } from '../../../lib/single-player-games/SnakeGame';
 import './SnakeGameClient.scss';
 import { logInDev } from '@/utils/logUtils';
 

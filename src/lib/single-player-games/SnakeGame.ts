@@ -1,4 +1,4 @@
-import { GameEngine } from './GameEngine';
+import { GameEngine } from '../game-engine/GameEngine';
 import { Dispatch } from '@reduxjs/toolkit';
 import {
   BASE_SPEED,
@@ -9,7 +9,7 @@ import {
   DIR_UP,
   GAME_AREA_TOP,
   TILE_SIZE,
-} from './constants';
+} from '../game-engine/constants';
 import { updateLives, updateScore } from '@/store/slices/snakeGameSlice';
 import { GameColors, Position } from '@/definitions/gameEngineTypes';
 
