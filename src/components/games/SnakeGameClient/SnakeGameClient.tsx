@@ -5,16 +5,7 @@ import { RootState } from '@/definitions/storeTypes';
 import { SnakeGame } from '../../../lib/single-player-games/SnakeGame';
 import './SnakeGameClient.scss';
 import { logInDev } from '@/utils/logUtils';
-
-// Define game colors using SASS variables
-const GAME_COLORS = {
-  background: 'rgba(0, 0, 0, 100%)', // Black background
-  border: 'rgba(0, 255, 255, 100%)', // Cyan border
-  snakeHead: 'rgba(0, 255, 0, 100%)', // Green snake head
-  snakeBody: 'rgba(0, 200, 0, 100%)', // Slightly darker green body
-  food: 'rgba(255, 0, 0, 100%)', // Red apple
-  text: 'rgba(255, 255, 255, 100%)', // White text
-};
+import { DEFAULT_COLORS } from '@/lib/game-engine/constants';
 
 function SnakeGameClient() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -36,7 +27,7 @@ function SnakeGameClient() {
       // Create game instance
       const game = new SnakeGame(canvas, {
         dispatch,
-        colors: GAME_COLORS,
+        colors: DEFAULT_COLORS,
         onGameOver: () => {
           // This would navigate back to main menu in a real app
           logInDev('Game over, returning to main menu');

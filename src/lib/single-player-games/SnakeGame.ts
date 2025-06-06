@@ -3,6 +3,7 @@ import { Dispatch } from '@reduxjs/toolkit';
 import {
   BASE_SPEED,
   BORDER_OFFSET,
+  DEFAULT_COLORS,
   DIR_DOWN,
   DIR_LEFT,
   DIR_RIGHT,
@@ -18,16 +19,6 @@ interface SnakeGameOptions {
   onGameOver?: () => void;
   colors?: GameColors;
 }
-
-// Default colors
-const DEFAULT_COLORS: GameColors = {
-  background: 'rgba(0, 0, 0, 100%)',
-  border: 'rgba(0, 255, 255, 100%)', // Cyan
-  snakeHead: 'rgba(0, 255, 0, 100%)', // Green
-  snakeBody: 'rgba(0, 255, 0, 100%)', // Green
-  food: 'rgba(255, 0, 0, 100%)', // Red
-  text: 'rgba(255, 255, 255, 100%)', // White
-};
 
 export class SnakeGame extends GameEngine {
   // Snake specific state
