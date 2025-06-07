@@ -84,8 +84,10 @@ export abstract class GameEngine {
 
   // Reset the game
   public resetGame(): void {
+    this.stop();
     this.cleanup();
     this.init();
+    this.start();
   }
 
   // Handle keyboard input

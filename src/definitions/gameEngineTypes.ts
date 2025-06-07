@@ -18,3 +18,18 @@ export interface Position {
   x: number;
   y: number;
 }
+
+export type GamePhase = 'waiting' | 'playing' | 'ended';
+
+export interface RenderConfig {
+  boardWidth: number;
+  boardHeight: number;
+  colors: GameColors;
+  showDebugInfo: boolean;
+}
+
+export interface ControlItem {
+  key: string;
+  action: string;
+  onClick?: () => void;
+}

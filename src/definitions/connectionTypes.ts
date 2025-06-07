@@ -1,5 +1,9 @@
 export type ClientType = 'esp32' | 'web' | 'mobile'; // Client type to determine serialization method
 
+export type ConnectionStatus = 'connecting' | 'connected' | 'disconnected';
+
+export type StatusMessageType = 'error' | 'warning' | 'info' | 'success';
+
 // export type MessageType =
 //   | 'connection'
 //   | 'echo'

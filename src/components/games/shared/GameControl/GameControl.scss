@@ -1,0 +1,21 @@
+.game-controls {
+  .control-item {
+    // .key {
+    //   // Add your key styling here
+    // }
+
+    // .action {
+    // }
+
+    .action-button {
+      background: none;
+      border: none;
+      color: inherit;
+      cursor: pointer;
+      font-size: inherit;
+
+      //   &:hover {
+      //   }
+    }
+  }
+}

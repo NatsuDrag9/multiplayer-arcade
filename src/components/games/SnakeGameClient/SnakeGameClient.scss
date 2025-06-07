@@ -14,24 +14,6 @@
     text-shadow: 0 0 1rem rgba(0, 255, 0, 0.5);
   }
 
-  .game-stats {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-    max-width: 64rem;
-    margin-bottom: 1rem;
-
-    .score,
-    .lives {
-      font-family: monospace;
-      font-size: 1.2rem;
-      padding: 0.5rem 1.5rem;
-      background-color: $color-black;
-      border: 2px solid $color-cyan;
-      border-radius: 0.4rem;
-    }
-  }
-
   .game-canvas-container {
     width: 100%;
     max-width: 64rem;
@@ -68,7 +50,7 @@
       min-width: 12rem;
 
       .key {
-        font-family: monospace;
+        font-family: $primary-font;
         background-color: $color-blue;
         color: $color-white;
         padding: 0.3rem 0.8rem;

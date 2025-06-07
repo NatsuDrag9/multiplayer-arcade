@@ -154,8 +154,9 @@ export class SnakeGame extends GameEngine {
       this.canvas.height - GAME_AREA_TOP - BORDER_OFFSET
     );
 
-    // Draw score and lives
-    this.renderStatus();
+    // Using GameStatsCard to display score
+    // // Draw score and lives
+    // this.renderStatus();
 
     // Draw snake
     this.renderSnake();
