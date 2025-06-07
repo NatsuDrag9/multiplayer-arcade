@@ -1,0 +1,30 @@
+.connection-status-card {
+  padding: 0.5rem 1.5rem;
+  border-radius: 0.4rem;
+  font-family: $primary-font;
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-align: center;
+  min-width: 12rem;
+  border: 0.2rem solid;
+
+  &--connected {
+    color: $color-green;
+    border-color: $color-green;
+  }
+
+  &--connecting {
+    color: $color-yellow;
+    border-color: $color-yellow;
+  }
+
+  &--disconnected {
+    color: $color-red;
+    border-color: $color-red;
+  }
+
+  &--default {
+    color: $color-gray;
+    border-color: $color-gray;
+  }
+}

@@ -1,0 +1,39 @@
+.status-message-card {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 0.4rem;
+  text-align: center;
+  border: 1px solid;
+  font-family: $primary-font;
+  font-size: 1rem;
+
+  &--error {
+    background: $color-card-bg;
+    border-color: $color-red;
+    color: $color-red;
+  }
+
+  &--warning {
+    background: $color-card-bg;
+    border-color: $color-yellow;
+    color: $color-yellow;
+  }
+
+  &--info {
+    background: $color-card-bg;
+    border-color: $color-blue;
+    color: $color-blue;
+  }
+
+  &--success {
+    background: $color-card-bg;
+    border-color: $color-green;
+    color: $color-green;
+  }
+
+  &--default {
+    background: $color-card-bg;
+    border-color: $color-gray;
+    color: $color-text-two;
+  }
+}
