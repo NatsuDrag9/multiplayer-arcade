@@ -1,8 +1,42 @@
 .game-stats-card {
   display: flex;
-  flex-direction: row;
   gap: 1rem;
   justify-content: center;
   width: 100%;
   height: 100%;
+  font-family: monospace;
+  font-size: 1.4rem;
+
+  &--single {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  &--multiplayer {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+
+    .player-stats {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 1rem;
+
+      .player-label {
+        font-weight: bold;
+        color: $color-text-one;
+      }
+
+      .score,
+      .lives {
+        color: $color-text-two;
+      }
+    }
+  }
+
+  .score,
+  .lives {
+    color: $color-text-two;
+  }
 }

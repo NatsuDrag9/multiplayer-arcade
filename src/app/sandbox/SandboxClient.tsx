@@ -43,9 +43,19 @@ function SandboxClient() {
             <ConnectionStatusCard status="disconnected" />
           </div>
         </div>
-        <div className="sandbox__component">
+        <div className="sandbox__component card">
           <h4 className="body-one sub-title">Game Stats Card</h4>
-          <GameStatsCard lives={3} score={100} />
+          <div className="sandbox-component--modified">
+            {/* Single Player */}
+            <GameStatsCard playerScores={[{ lives: 3, score: 100 }]} />
+            {/* Multiplayer */}
+            <GameStatsCard
+              playerScores={[
+                { lives: 3, score: 100 },
+                { lives: 1, score: 90 },
+              ]}
+            />
+          </div>
         </div>
         <div className="sandbox__component card">
           <h4 className="body-one sub-title">Status Message Card</h4>
