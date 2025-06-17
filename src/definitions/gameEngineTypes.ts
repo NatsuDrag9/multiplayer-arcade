@@ -26,6 +26,7 @@ export interface RenderConfig {
   boardHeight: number;
   colors: GameColors;
   showDebugInfo: boolean;
+  onReconnectRequest?: () => void;
 }
 
 export interface ControlItem {
