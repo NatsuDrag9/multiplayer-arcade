@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/definitions/storeTypes';
 import './SnakeGameClient.scss';
 import { logInDev } from '@/utils/logUtils';
-import { DEFAULT_COLORS } from '@/lib/game-engine/constants';
+import { DEFAULT_COLORS } from '@/constants/gameConstants';
 import { SnakeGame } from '@/lib/single-player-games/SnakeGame';
 import { useGameKeyboardHandler } from '@/hooks/useGameKeyboardHandler';
 import { GameControls } from '../shared/GameControl/GameControl';

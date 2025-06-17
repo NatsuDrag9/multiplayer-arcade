@@ -10,7 +10,7 @@ import {
   DIR_UP,
   GAME_AREA_TOP,
   TILE_SIZE,
-} from '../game-engine/constants';
+} from '@/constants/gameConstants';
 import { updateLives, updateScore } from '@/store/slices/snakeGameSlice';
 import { GameColors, Position } from '@/definitions/gameEngineTypes';
 
@@ -556,5 +556,9 @@ export class SnakeGame extends GameEngine {
       this.dispatch(updateScore(0));
       this.dispatch(updateLives(3));
     }
+  }
+
+  public forceDisconnect(): void {
+    //  Do nothing
   }
 }
