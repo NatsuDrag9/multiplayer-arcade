@@ -3,7 +3,7 @@ import http from 'http';
 import { WebSocketServer } from 'ws';
 import cors from 'cors';
 import helmet from 'helmet';
-import { setupWebSocketServer } from './lib/websocket';
+import { setupWebSocketServer } from './websocket';
 
 // Create Express app
 const app = express();
