@@ -9,6 +9,8 @@ const nextConfig: NextConfig = {
       @use 'helpers' as *;
     `,
   },
+  // Disable React StrictMode in development to prevent WebSocket double connections
+  reactStrictMode: false,
 };
 
 export default nextConfig;
