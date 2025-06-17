@@ -219,32 +219,36 @@ export class SnakeGame extends GameEngine {
     // Draw head at the origin (adjusted for rotation)
     this.ctx.fillRect(-TILE_SIZE / 2, -TILE_SIZE / 2, TILE_SIZE, TILE_SIZE);
 
-    // Draw eyes (white)
+    // Draw eyes (white) - vertically aligned
     this.ctx.fillStyle = 'white';
+    // Top eye
     this.ctx.fillRect(
-      -TILE_SIZE / 4,
-      -TILE_SIZE / 4,
+      -TILE_SIZE / 8,
+      -TILE_SIZE / 3,
       TILE_SIZE / 6,
       TILE_SIZE / 6
     );
+    // Bottom eye
     this.ctx.fillRect(
-      TILE_SIZE / 8,
-      -TILE_SIZE / 4,
+      -TILE_SIZE / 8,
+      -TILE_SIZE / 12,
       TILE_SIZE / 6,
       TILE_SIZE / 6
     );
 
-    // Draw pupils (black)
+    // Draw pupils (black) - vertically aligned
     this.ctx.fillStyle = 'black';
+    // Top pupil
     this.ctx.fillRect(
-      -TILE_SIZE / 4,
-      -TILE_SIZE / 4,
+      -TILE_SIZE / 8,
+      -TILE_SIZE / 3,
       TILE_SIZE / 12,
       TILE_SIZE / 12
     );
+    // Bottom pupil
     this.ctx.fillRect(
-      TILE_SIZE / 8,
-      -TILE_SIZE / 4,
+      -TILE_SIZE / 8,
+      -TILE_SIZE / 12,
       TILE_SIZE / 12,
       TILE_SIZE / 12
     );
