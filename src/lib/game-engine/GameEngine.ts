@@ -111,6 +111,10 @@ export abstract class GameEngine {
         // This could trigger a return to main menu
         this.handleEscapeKey();
         break;
+      case 'x':
+      case 'X':
+        this.forceDisconnect();
+        break;
     }
   }
 
@@ -129,6 +133,7 @@ export abstract class GameEngine {
   protected abstract render(): void;
   protected abstract cleanup(): void;
   protected abstract handleEscapeKey(): void;
+  public abstract forceDisconnect(): void;
 
   // Getters for game state
   public getScore(): number {

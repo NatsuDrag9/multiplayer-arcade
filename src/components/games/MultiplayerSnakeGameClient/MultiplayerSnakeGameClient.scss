@@ -1,0 +1,34 @@
+.game-stats {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.game-phase-card {
+  padding: 0.5rem 1.5rem;
+  border-radius: 0.4rem;
+  font-family: monospace;
+  font-size: 1.2rem;
+  text-align: center;
+  min-width: 12rem;
+  border: 0.2rem solid;
+
+  // Color and border-color are set dynamically via inline style
+  // since they depend on the game phase state
+}
+
+.multiplayer-info {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  color: $color-gray;
+
+  .player-info,
+  .player-count,
+  .latency {
+    // Individual styling for each info type if needed
+  }
+}

@@ -7,7 +7,7 @@ interface GameCanvasProps {
   onCanvasReady?: (canvas: HTMLCanvasElement) => void;
   onContainerClick?: () => void;
   className?: string;
-  playerScores: PlayerScore[];
+  playerScores?: PlayerScore[];
 }
 
 export const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(
@@ -36,7 +36,7 @@ export const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(
 
     return (
       <div className="game-canvas-container" onClick={onContainerClick}>
-        <GameStatsCard playerScores={playerScores} />
+        {playerScores && <GameStatsCard playerScores={playerScores} />}
         <canvas ref={canvasRef} className={className} tabIndex={0} />
       </div>
     );
