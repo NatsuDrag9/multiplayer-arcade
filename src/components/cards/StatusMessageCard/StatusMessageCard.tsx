@@ -1,9 +1,9 @@
 import React from 'react';
-import { StatusMessageType } from '@/definitions/connectionTypes';
+import { StatusMessageCardType } from '@/definitions/connectionTypes';
 import './StatusMessageCard.scss';
 
 interface StatusMessageCardProps {
-  type: StatusMessageType;
+  type: StatusMessageCardType;
   message: string;
   className?: string;
 }
