@@ -308,10 +308,15 @@ export class MultiplayerSnakeCore {
   // Game events
   public handleGameEvent(eventData: string): void {
     if (eventData.includes('event:food_eaten')) {
-      logInDev('Food eaten!');
+      logInDev('Food eaten: ', eventData);
     } else if (eventData.includes('event:collision')) {
-      logInDev('Player collision!');
+      logInDev('Player collision: ', eventData);
     }
+
+    // Other game events
+    // direction_changed
+    // collision, cause: self, opponent
+    // food_eaten
   }
 
   // Utility methods

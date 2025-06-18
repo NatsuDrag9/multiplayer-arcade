@@ -105,13 +105,13 @@ export function assignPlayerToSession(client: Client): void {
     }
   });
 
+  // Send current game state to the new player
+  sendGameStateToPlayer(client, session);
+
   // Check if game can start
   if (session.players.size === 2) {
     startGameSession(session);
   }
-
-  // Send current game state to the new player
-  sendGameStateToPlayer(client, session);
 }
 
 // Start a game session when 2 players are ready
@@ -151,7 +151,13 @@ function startGameLoop(session: GameSession): void {
 
 // Update game state and broadcast to players
 function updateGameSession(session: GameSession): void {
-  if (session.game.getGamePhase() !== 'playing') return;
+  if (session.game.getGamePhase() !== 'playing') {
+    console.log(
+      'Game phase in updateGameSession(): ',
+      session.game.getGamePhase()
+    );
+    return;
+  }
 
   // Let the authoritative game handle the update
   session.game.tick();
@@ -171,6 +177,7 @@ export function sendGameStateToPlayer(
   client: Client,
   session: GameSession
 ): void {
+  console.log('In sendGameStateToPlayer()');
   const gameStateData = session.game.formatGameStateData();
 
   const gameStateMessage: GameDataMessage = {
@@ -182,6 +189,8 @@ export function sendGameStateToPlayer(
     sessionId: session.id,
     timestamp: Date.now(),
   };
+
+  console.log('Sending game state to player: ', client.playerId);
 
   sendMessage(client.ws, gameStateMessage, client.type);
 }

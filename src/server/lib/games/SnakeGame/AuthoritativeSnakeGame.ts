@@ -87,7 +87,8 @@ export class AuthoritativeSnakeGame
 
     this.gameState.scores[playerId] = 0;
 
-    this.emitEvent('player_joined', { playerId });
+    // Status = player_assignment conveys this to the client
+    // this.emitEvent('player_joined', { playerId });
 
     return { success: true, playerId };
   }
@@ -101,7 +102,8 @@ export class AuthoritativeSnakeGame
     this.gameState.players.delete(clientId);
     delete this.gameState.scores[playerId];
 
-    this.emitEvent('player_left', { playerId });
+    // Handled by endGame() in gameSessionManagement.ts and handleDisconnect in websocket.ts
+    // this.emitEvent('player_left', { playerId });
 
     if (this.gameState.gamePhase === 'playing') {
       this.endGame();
@@ -119,7 +121,7 @@ export class AuthoritativeSnakeGame
     }
 
     // Validate direction
-    if (direction < DIR_LEFT || direction > DIR_UP) return false;
+    if (direction < DIR_RIGHT || direction > DIR_UP) return false;
 
     // Validate direction change (can't reverse into self)
     if (direction === SNAKE_GAME_OPPOSITES[player.direction]) return false;

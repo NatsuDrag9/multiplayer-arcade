@@ -114,6 +114,24 @@ export class MultiplayerSnakeRenderer {
     }
   }
 
+  // Render player color
+  private renderPlayerColor(
+    localPlayer: boolean,
+    x: number,
+    y: number,
+    radius: number = 8
+  ) {
+    // Determine player color based on whether it's local player
+    const playerColor = localPlayer
+      ? this.config.colors.snakeHead
+      : 'rgba(0, 0, 255, 100%)'; // Blue for opponent
+
+    this.ctx.fillStyle = playerColor;
+    this.ctx.beginPath();
+    this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+    this.ctx.fill();
+  }
+
   // Screen rendering methods
   private renderWaitingScreen(
     connectionStatus: ConnectionStatus,
@@ -137,10 +155,15 @@ export class MultiplayerSnakeRenderer {
         this.ctx.fillText('Waiting for opponent...', centerX, centerY);
 
         this.ctx.font = '12px monospace';
-        this.ctx.fillText(
-          `You are Player ${localPlayerId}`,
-          centerX,
-          centerY + 20
+        const playerText = `You are Player ${localPlayerId}`;
+        this.ctx.fillText(playerText, centerX, centerY + 20);
+
+        const textWidth = this.ctx.measureText(playerText).width;
+
+        this.renderPlayerColor(
+          localPlayerId === 1,
+          textWidth + 280,
+          centerY + 17
         );
 
         if (isSpectator) {
@@ -227,6 +250,10 @@ export class MultiplayerSnakeRenderer {
 
     const playerText = `You are Player ${localPlayerId}`;
     this.ctx.fillText(playerText, 8, 8);
+
+    // Render small color indicator next to the text
+    const textWidth = this.ctx.measureText(playerText).width;
+    this.renderPlayerColor(localPlayerId === 1, 8 + textWidth + 15, 12, 6);
   }
 
   private renderPlayers(
@@ -263,27 +290,61 @@ export class MultiplayerSnakeRenderer {
       this.ctx.fillStyle = headColor;
       this.ctx.fillRect(renderPlayer.x, renderPlayer.y, TILE_SIZE, TILE_SIZE);
 
-      // Player number indicator
+      // Draw eyes (white) - vertically aligned
       this.ctx.fillStyle = 'white';
-      this.ctx.font = '8px monospace';
-      this.ctx.textAlign = 'center';
-      this.ctx.fillText(
-        player.playerId.toString(),
-        renderPlayer.x + TILE_SIZE / 2,
-        renderPlayer.y + TILE_SIZE / 2 + 2
+      // Top eye
+      this.ctx.fillRect(
+        -TILE_SIZE / 8,
+        -TILE_SIZE / 3,
+        TILE_SIZE / 6,
+        TILE_SIZE / 6
+      );
+      // Bottom eye
+      this.ctx.fillRect(
+        -TILE_SIZE / 8,
+        -TILE_SIZE / 12,
+        TILE_SIZE / 6,
+        TILE_SIZE / 6
       );
 
-      // Prediction indicator for local player
-      if (isLocalPlayer && predictedPlayer) {
-        this.ctx.strokeStyle = 'yellow';
-        this.ctx.lineWidth = 1;
-        this.ctx.strokeRect(
-          renderPlayer.x - 1,
-          renderPlayer.y - 1,
-          TILE_SIZE + 2,
-          TILE_SIZE + 2
-        );
-      }
+      // Draw pupils (black) - vertically aligned
+      this.ctx.fillStyle = 'black';
+      // Top pupil
+      this.ctx.fillRect(
+        -TILE_SIZE / 8,
+        -TILE_SIZE / 3,
+        TILE_SIZE / 12,
+        TILE_SIZE / 12
+      );
+      // Bottom pupil
+      this.ctx.fillRect(
+        -TILE_SIZE / 8,
+        -TILE_SIZE / 12,
+        TILE_SIZE / 12,
+        TILE_SIZE / 12
+      );
+
+      // // Player number indicator
+      // this.ctx.fillStyle = 'white';
+      // this.ctx.font = '8px monospace';
+      // this.ctx.textAlign = 'center';
+      // this.ctx.fillText(
+      //   player.playerId.toString(),
+      //   renderPlayer.x + TILE_SIZE / 2,
+      //   renderPlayer.y + TILE_SIZE / 2 + 2
+      // );
+
+      // // Prediction indicator for local player
+      // if (isLocalPlayer && predictedPlayer) {
+      //   this.ctx.strokeStyle = 'yellow';
+      //   this.ctx.lineWidth = 1;
+      //   this.ctx.strokeRect(
+      //     renderPlayer.x - 1,
+      //     renderPlayer.y - 1,
+      //     TILE_SIZE + 2,
+      //     TILE_SIZE + 2
+      //   );
+      // }
     });
   }
 
