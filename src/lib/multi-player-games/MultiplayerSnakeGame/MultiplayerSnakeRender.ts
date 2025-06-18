@@ -192,7 +192,8 @@ export class MultiplayerSnakeRenderer {
     this.renderBorder();
 
     // Draw game elements
-    this.renderPlayerId(localPlayerId); // Changed from renderStatus(gameStats)
+    this.renderPlayerId(localPlayerId);
+    this.renderStatus(gameStats);
     this.renderFood(food);
     this.renderPlayers(players, localPlayerId, predictedPlayer);
   }
@@ -238,8 +239,9 @@ export class MultiplayerSnakeRenderer {
     this.ctx.textAlign = 'left';
     this.ctx.textBaseline = 'top';
 
-    const statusText = `P1: ${gameStats.p1Score} | P2: ${gameStats.p2Score} | Target: ${gameStats.targetScore}`;
-    this.ctx.fillText(statusText, 8, 8);
+    // const statusText = `P1: ${gameStats.p1Score} | P2: ${gameStats.p2Score} | Target: ${gameStats.targetScore}`;
+    const statusText = `Target: ${gameStats.targetScore === 0 ? '-' : gameStats.targetScore}`;
+    this.ctx.fillText(statusText, this.canvas.width - 90, 8);
   }
 
   private renderPlayerId(localPlayerId: number): void {
