@@ -171,7 +171,7 @@ export class MultiplayerSnakeNetwork {
     const message: GameDataMessage = {
       type: 'game_data_message',
       data_type: 'game_state',
-      data: 'full_state',
+      data: 'Require game state from server',
       player_id: this.playerId.toString(),
       clientId: this.clientId,
       timestamp: Date.now(),
