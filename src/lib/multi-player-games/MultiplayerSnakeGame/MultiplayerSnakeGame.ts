@@ -105,7 +105,7 @@ export class MultiplayerSnakeGame
     const gameConfig: MultiplayerGameConfig = {
       boardWidth: 320,
       boardHeight: 240,
-      targetScore: 10,
+      targetScore: 0,
       maxPlayers: 2,
     };
 
@@ -347,11 +347,24 @@ export class MultiplayerSnakeGame
         break;
 
       case 'game_state':
+        // Check if target_score exists in the message data
+        if (message.data.includes('target_score:')) {
+          const match = message.data.match(/target_score:\s*(\d+)/);
+          if (match) {
+            const extractedTargetScore = parseInt(match[1], 10);
+            this.setTargetScore(extractedTargetScore);
+            logInDev('Target score set to:', extractedTargetScore);
+          }
+        }
+
+        // Normal game state processing
         this.core.parsePlayerUpdate(message.data);
         this.updateLocalScore();
+
         break;
 
       case 'player_action':
+        // Typically only used by client and not sent by server
         break;
 
       default:
@@ -399,6 +412,16 @@ export class MultiplayerSnakeGame
   }
 
   // Helper methods
+  private setTargetScore(score: number): void {
+    // Update the target score in core config
+    const currentCoreConfig = this.core.getConfig();
+    const updatedCoreConfig = {
+      ...currentCoreConfig,
+      targetScore: score,
+    };
+    this.core.updateConfig(updatedCoreConfig);
+  }
+
   private updateLocalScore(): void {
     if (this.onScoreUpdate) {
       const gameStats = this.core.getGameStats();

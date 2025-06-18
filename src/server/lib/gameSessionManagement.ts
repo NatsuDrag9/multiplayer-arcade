@@ -177,13 +177,15 @@ export function sendGameStateToPlayer(
   client: Client,
   session: GameSession
 ): void {
-  console.log('In sendGameStateToPlayer()');
+  // Send initial game state and target score to be acheived
+
   const gameStateData = session.game.formatGameStateData();
+  const targetScore = session.game.getTargetScore();
 
   const gameStateMessage: GameDataMessage = {
     type: 'game_data_message',
     data_type: 'game_state',
-    data: gameStateData,
+    data: `${gameStateData};target_score: ${targetScore}`,
     player_id: client.playerId?.toString(),
     clientId: client.id,
     sessionId: session.id,

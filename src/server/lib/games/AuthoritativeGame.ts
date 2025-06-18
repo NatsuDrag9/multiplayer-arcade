@@ -20,4 +20,5 @@ export interface AuthoritativeGame<
   getPlayerCount(): number;
   isGameActive(): boolean;
   formatGameStateData(): string;
+  getTargetScore(): number;
 }

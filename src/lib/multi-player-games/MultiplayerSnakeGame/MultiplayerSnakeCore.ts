@@ -77,6 +77,10 @@ export class MultiplayerSnakeCore {
     return { ...this.config };
   }
 
+  public updateConfig(config: MultiplayerGameConfig) {
+    this.config = config;
+  }
+
   // Player management
   public updatePlayer(
     playerId: number,
@@ -307,16 +311,44 @@ export class MultiplayerSnakeCore {
 
   // Game events
   public handleGameEvent(eventData: string): void {
-    if (eventData.includes('event:food_eaten')) {
-      logInDev('Food eaten: ', eventData);
-    } else if (eventData.includes('event:collision')) {
-      logInDev('Player collision: ', eventData);
-    }
+    logInDev('Event data: ', eventData);
 
-    // Other game events
-    // direction_changed
-    // collision, cause: self, opponent
-    // food_eaten
+    try {
+      // Parse the JSON string to extract event data
+      const parsedEvent: Record<string, string | number> =
+        JSON.parse(eventData);
+      const eventType = parsedEvent.event;
+
+      // Use switch case based on event type
+      switch (eventType) {
+        case 'food_eaten':
+          logInDev('Food eaten by player: ', parsedEvent.playerId);
+          // this.handleFoodEaten(parsedEvent);
+          break;
+
+        case 'collision':
+          logInDev('Player collision: ', parsedEvent);
+          logInDev('Collision cause: ', parsedEvent.cause);
+          // this.handleCollision(parsedEvent);
+          break;
+
+        case 'direction_changed':
+          logInDev(
+            'Direction changed for player: ',
+            parsedEvent,
+            'New direction: ',
+            parsedEvent.direction
+          );
+          // this.handleDirectionChange(parsedEvent);
+          break;
+
+        default:
+          logInDev('Unknown event type: ', eventType);
+          break;
+      }
+    } catch (error) {
+      logInDev('Error parsing event data: ', error);
+    }
   }
 
   // Utility methods

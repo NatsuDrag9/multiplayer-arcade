@@ -181,6 +181,10 @@ export class AuthoritativeSnakeGame
     return this.gameState.gamePhase === 'playing';
   }
 
+  getTargetScore(): number {
+    return this.config.targetScore;
+  }
+
   formatGameStateData(): string {
     const players = Array.from(this.gameState.players.entries()); // Get [clientId, player] pairs
     const p1Entry = players.find(

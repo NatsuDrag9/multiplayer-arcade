@@ -33,7 +33,7 @@ function MultiplayerSnakeGameClient({
     p1Lives: 0,
     p2Score: 0,
     p2Lives: 0,
-    targetScore: 10,
+    targetScore: 0,
   });
 
   // Get connection state from the simplified hook
