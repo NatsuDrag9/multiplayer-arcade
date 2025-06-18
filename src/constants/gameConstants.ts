@@ -27,7 +27,7 @@ export const SNAKE_GAME_OPPOSITES: Record<number, number> = {
 export const DEFAULT_COLORS: GameColors = {
   background: 'rgba(0, 0, 0, 100%)',
   border: 'rgba(0, 255, 255, 100%)', // Cyan
-  snakeHead: 'rgba(0, 255, 0, 100%)', // Green
+  snakeHead: 'rgba(0, 120, 0, 100%)', // Green
   snakeBody: 'rgba(0, 255, 0, 100%)', // Green
   food: 'rgba(255, 0, 0, 100%)', // Red
   text: 'rgba(255, 255, 255, 100%)', // White
