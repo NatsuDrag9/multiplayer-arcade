@@ -11,6 +11,7 @@ import { encode } from '@msgpack/msgpack';
 import WebSocket from 'ws';
 import { clients } from '../websocket';
 import { gameSessions, getSessionStats } from './gameSessionManagement';
+import { GameSession } from '@/definitions/gameSessionTypes';
 
 // Determine client type based on User-Agent or URL parameters
 export function determineClientType(userAgent: string, url: URL): ClientType {
@@ -344,29 +345,26 @@ export function broadcastToAll(message: GameMessage, excludeClientId?: string) {
   );
 }
 
-// Broadcast message to specific session
-export function broadcastToSession(
-  sessionId: string,
-  message: GameMessage,
-  excludeClientId?: string
-) {
-  const session = gameSessions.get(sessionId);
-  if (!session) return;
+// Broadcast inputs
+export function broadcastInputToSession(
+  session: GameSession,
+  playerId: number,
+  direction: number,
+  sequence: number
+): void {
+  // Just the input and sequence
+  const inputMessage: GameDataMessage = {
+    type: 'game_data_message',
+    data_type: 'player_action',
+    data: `playerId:${playerId},direction:${direction}`,
+    metadata: `seq:${sequence}`,
+    sessionId: session.id,
+    timestamp: Date.now(),
+  };
 
-  let broadcastCount = 0;
-
-  session.players.forEach((client) => {
-    if (excludeClientId && client.id === excludeClientId) return;
-
-    if (client.ws.readyState === WebSocket.OPEN) {
-      sendMessage(client.ws, message, client.type);
-      broadcastCount++;
-    }
+  session.players.forEach((player) => {
+    sendMessage(player.ws, inputMessage, player.type);
   });
-
-  console.log(
-    `Broadcasted ${message.type} message to ${broadcastCount} players in session ${sessionId}`
-  );
 }
 
 // Get detailed server status

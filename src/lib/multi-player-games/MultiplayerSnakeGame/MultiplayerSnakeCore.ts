@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 import { GamePhase, Position } from '@/definitions/gameEngineTypes';
 import { logInDev } from '@/utils/logUtils';
 import {
@@ -6,6 +7,8 @@ import {
   MultiplayerPlayerState,
 } from '@/definitions/snakeGameTypes';
 import {
+  DIR_DOWN,
+  DIR_LEFT,
   DIR_RIGHT,
   DIR_UP,
   SNAKE_GAME_OPPOSITES,
@@ -27,6 +30,7 @@ export class MultiplayerSnakeCore {
   private predictedLocalPlayer: MultiplayerPlayerState | null = null;
   private pendingInputs: Array<{ direction: number; timestamp: number }> = [];
   private lastInputTime: number = 0;
+  private lastProcessedSequence: number = 0; // Track last processed sequence to handle out-of-order messages
 
   constructor(
     localPlayerId: number,
@@ -239,6 +243,9 @@ export class MultiplayerSnakeCore {
 
   // Data parsing from server
   public parsePlayerUpdate(data: string): void {
+    // This method now primarily handles periodic state synchronization
+    // Most real-time updates come through handleGameEvent
+
     // Parse: "p1:x:45,y:67,len:8,alive:1;p2:x:23,y:34,len:5,alive:1;food:x:12,y:56;scores:4,7"
     const sections = data.split(';');
 
@@ -268,6 +275,10 @@ export class MultiplayerSnakeCore {
       length: this.parseValue(parts.find((p) => p.includes('len:'))) || 1,
       alive: this.parseValue(parts.find((p) => p.includes('alive:'))) === 1,
     };
+
+    // Convert server coordinates (grid) to client coordinates (pixels)
+    if (playerData.x !== undefined) playerData.x *= TILE_SIZE;
+    if (playerData.y !== undefined) playerData.y *= TILE_SIZE;
 
     this.updatePlayer(playerId, playerData);
   }
@@ -309,6 +320,101 @@ export class MultiplayerSnakeCore {
     return body;
   }
 
+  // This method is intended to mutate the player object.
+  // Hence, disabled the param no re-assign ESLint rule
+  private mutatePlayerPosition(player: MultiplayerPlayerState): void {
+    const head = { x: player.x, y: player.y };
+
+    // Move based on direction (same logic as server)
+    switch (player.direction) {
+      case DIR_UP:
+        head.y -= TILE_SIZE;
+        break;
+      case DIR_RIGHT:
+        head.x += TILE_SIZE;
+        break;
+      case DIR_DOWN:
+        head.y += TILE_SIZE;
+        break;
+      case DIR_LEFT:
+        head.x -= TILE_SIZE;
+        break;
+    }
+
+    // Update player position
+    player.x = head.x;
+    player.y = head.y;
+
+    // Update body - add new head
+    player.body.unshift({ ...head });
+
+    // Remove tail (unless we just ate food)
+    if (player.body.length > player.length) {
+      player.body.pop();
+    }
+
+    // Handle wall wrapping (same as server)
+    if (player.x < 0) player.x = (this.config.boardWidth - 1) * TILE_SIZE;
+    if (player.x >= this.config.boardWidth * TILE_SIZE) player.x = 0;
+    if (player.y < 0) player.y = (this.config.boardHeight - 1) * TILE_SIZE;
+    if (player.y >= this.config.boardHeight * TILE_SIZE) player.y = 0;
+
+    // Update body after wrapping
+    if (player.body.length > 0) {
+      player.body[0].x = player.x;
+      player.body[0].y = player.y;
+    }
+  }
+
+  private handleDirectionChange(
+    eventData: Record<string, string | number>
+  ): void {
+    const playerId = Number(eventData.playerId);
+    const direction = Number(eventData.direction);
+    const sequence = Number(eventData.sequence);
+
+    if (playerId && direction !== undefined) {
+      this.handlePlayerInput(playerId, direction, sequence);
+    }
+  }
+
+  private handleFoodEaten(eventData: Record<string, string | number>): void {
+    const playerId = Number(eventData.playerId);
+    const player = this.players.get(playerId);
+
+    if (player) {
+      // Increase snake length
+      player.length++;
+      player.score++;
+
+      // Generate new food position (if provided by server)
+      if (
+        eventData.newFoodX !== undefined &&
+        eventData.newFoodY !== undefined
+      ) {
+        this.setFood({
+          x: Number(eventData.newFoodX) * TILE_SIZE,
+          y: Number(eventData.newFoodY) * TILE_SIZE,
+        });
+      }
+
+      logInDev(
+        `Player ${playerId} ate food, new length: ${player.length}, score: ${player.score}`
+      );
+    }
+  }
+
+  private handleCollision(eventData: Record<string, string | number>): void {
+    const playerId = Number(eventData.playerId);
+    const cause = eventData.cause as string;
+    const player = this.players.get(playerId);
+
+    if (player) {
+      player.alive = false;
+      logInDev(`Player ${playerId} died due to ${cause} collision`);
+    }
+  }
+
   // Game events
   public handleGameEvent(eventData: string): void {
     logInDev('Event data: ', eventData);
@@ -323,13 +429,13 @@ export class MultiplayerSnakeCore {
       switch (eventType) {
         case 'food_eaten':
           logInDev('Food eaten by player: ', parsedEvent.playerId);
-          // this.handleFoodEaten(parsedEvent);
+          this.handleFoodEaten(parsedEvent);
           break;
 
         case 'collision':
           logInDev('Player collision: ', parsedEvent);
           logInDev('Collision cause: ', parsedEvent.cause);
-          // this.handleCollision(parsedEvent);
+          this.handleCollision(parsedEvent);
           break;
 
         case 'direction_changed':
@@ -339,7 +445,7 @@ export class MultiplayerSnakeCore {
             'New direction: ',
             parsedEvent.direction
           );
-          // this.handleDirectionChange(parsedEvent);
+          this.handleDirectionChange(parsedEvent);
           break;
 
         default:
@@ -349,6 +455,37 @@ export class MultiplayerSnakeCore {
     } catch (error) {
       logInDev('Error parsing event data: ', error);
     }
+  }
+
+  public handlePlayerInput(
+    playerId: number,
+    direction: number,
+    sequence: number
+  ): void {
+    // Ensure inputs are processed in server order
+    if (sequence <= this.lastProcessedSequence) {
+      logInDev(
+        `Ignoring old input sequence ${sequence} (last: ${this.lastProcessedSequence})`
+      );
+      return;
+    }
+
+    this.lastProcessedSequence = sequence;
+
+    const player = this.players.get(playerId);
+    if (!player) {
+      logInDev(`handlePlayerInput: Player ${playerId} not found`);
+      return;
+    }
+
+    // Apply the direction change
+    player.direction = direction;
+    // Simulate the movement
+    this.mutatePlayerPosition(player);
+
+    logInDev(
+      `Player ${playerId} direction changed to ${direction}, sequence: ${sequence}`
+    );
   }
 
   // Utility methods

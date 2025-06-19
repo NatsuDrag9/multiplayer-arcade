@@ -38,8 +38,19 @@ export function createSnakeGameSession(): SnakeGameSession {
 
     console.log('Snake game event:', event, data);
 
-    // Handle all game events as GameDataMessage (game lifecycle is handled by gameSessionManagement)
-    const gameEventMessage = createGameEventMessage(event, data, session.id);
+    let gameEventMessage: GameDataMessage;
+
+    if (event === 'direction_changed') {
+      // Direction changes are player actions requiring sequence number to be sent
+      gameEventMessage = {
+        ...createGameEventMessage(event, data, session.id),
+        metadata: `seq:${data.sequence}`,
+      };
+    } else {
+      // All other events
+      gameEventMessage = createGameEventMessage(event, data, session.id);
+    }
+
     session.players.forEach((player) => {
       sendMessage(player.ws, gameEventMessage, player.type);
     });

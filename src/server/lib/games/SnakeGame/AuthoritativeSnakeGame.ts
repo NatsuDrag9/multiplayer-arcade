@@ -32,6 +32,7 @@ export class AuthoritativeSnakeGame
     event: string,
     data: Record<string, unknown>
   ) => void;
+  private inputSequence: number = 0;
 
   constructor(
     config: Partial<GameConfig> = {},
@@ -131,11 +132,13 @@ export class AuthoritativeSnakeGame
     if (now - player.lastInputTime < 50) return false;
 
     player.direction = direction;
+    this.inputSequence++;
     player.lastInputTime = now;
 
     this.emitEvent('direction_changed', {
       playerId: player.playerId,
       direction,
+      sequence: this.inputSequence,
     });
 
     return true;
@@ -335,9 +338,13 @@ export class AuthoritativeSnakeGame
       player.y === this.gameState.food.y
     ) {
       player.length++;
-      this.gameState.scores[player.playerId]++; // ← Use playerId for score
+      this.gameState.scores[player.playerId]++; // Use playerId for score
       this.gameState.food = this.generateFood();
-      this.emitEvent('food_eaten', { playerId: player.playerId });
+      this.emitEvent('food_eaten', {
+        playerId: player.playerId,
+        newFoodX: this.gameState.food.x, // Send new food position to server
+        newFoodY: this.gameState.food.y,
+      });
     }
   }
 

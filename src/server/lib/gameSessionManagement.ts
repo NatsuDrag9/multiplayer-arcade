@@ -119,6 +119,7 @@ export function startGameSession(session: GameSession): void {
   // Use game's startGame method instead of manually setting phase
   session.game.startGame();
   session.lastUpdate = Date.now();
+  session.stateBroadcastCounter = 0;
 
   // Send game_start command message
   const gameStartMessage: CommandMessage = {
@@ -161,10 +162,16 @@ function updateGameSession(session: GameSession): void {
 
   // Let the authoritative game handle the update
   session.game.tick();
-
-  // Broadcast the updated state
-  broadcastGameStateToSession(session);
   session.lastUpdate = Date.now();
+
+  // Increment the counter
+  session.stateBroadcastCounter++;
+
+  // Broadcast updated state every 20 ticks (20 * 100ms = 2 sec)
+  if (session.stateBroadcastCounter >= 20) {
+    broadcastGameStateToSession(session);
+    session.stateBroadcastCounter = 0;
+  }
 
   // Check if game ended
   if (session.game.getGamePhase() === 'ended') {

@@ -39,6 +39,7 @@ export interface GameSession<TGameState extends BaseGameState = BaseGameState> {
   lastUpdate: number;
   gameLoop?: NodeJS.Timeout;
   game: AuthoritativeGame<TGameState>;
+  stateBroadcastCounter: number;
 }
 
 // Type alias for Snake-specific session
