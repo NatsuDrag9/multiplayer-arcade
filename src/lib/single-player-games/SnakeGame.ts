@@ -9,7 +9,7 @@ import {
   DIR_RIGHT,
   DIR_UP,
   GAME_AREA_TOP,
-  TILE_SIZE,
+  TILE_SIZE_WEB_APP,
 } from '@/constants/gameConstants';
 import { updateLives, updateScore } from '@/store/slices/snakeGameSlice';
 import { GameColors, Position } from '@/definitions/gameEngineTypes';
@@ -72,7 +72,7 @@ export class SnakeGame extends GameEngine {
     // Initialize body
     this.body = [
       {
-        x: this.headX - TILE_SIZE,
+        x: this.headX - TILE_SIZE_WEB_APP,
         y: this.headY,
       },
     ];
@@ -190,7 +190,12 @@ export class SnakeGame extends GameEngine {
     // Draw snake body segments
     this.ctx.fillStyle = this.colors.snakeBody;
     for (let i = 0; i < this.length; i++) {
-      this.ctx.fillRect(this.body[i].x, this.body[i].y, TILE_SIZE, TILE_SIZE);
+      this.ctx.fillRect(
+        this.body[i].x,
+        this.body[i].y,
+        TILE_SIZE_WEB_APP,
+        TILE_SIZE_WEB_APP
+      );
     }
 
     // Draw snake head with proper rotation
@@ -198,7 +203,10 @@ export class SnakeGame extends GameEngine {
     this.ctx.fillStyle = this.colors.snakeHead;
 
     // Translate to the center of the head
-    this.ctx.translate(this.headX + TILE_SIZE / 2, this.headY + TILE_SIZE / 2);
+    this.ctx.translate(
+      this.headX + TILE_SIZE_WEB_APP / 2,
+      this.headY + TILE_SIZE_WEB_APP / 2
+    );
 
     // Rotate based on direction
     switch (this.direction) {
@@ -217,46 +225,56 @@ export class SnakeGame extends GameEngine {
     }
 
     // Draw head at the origin (adjusted for rotation)
-    this.ctx.fillRect(-TILE_SIZE / 2, -TILE_SIZE / 2, TILE_SIZE, TILE_SIZE);
+    this.ctx.fillRect(
+      -TILE_SIZE_WEB_APP / 2,
+      -TILE_SIZE_WEB_APP / 2,
+      TILE_SIZE_WEB_APP,
+      TILE_SIZE_WEB_APP
+    );
 
     // Draw eyes (white) - vertically aligned
     this.ctx.fillStyle = 'white';
     // Top eye
     this.ctx.fillRect(
-      -TILE_SIZE / 8,
-      -TILE_SIZE / 3,
-      TILE_SIZE / 6,
-      TILE_SIZE / 6
+      -TILE_SIZE_WEB_APP / 8,
+      -TILE_SIZE_WEB_APP / 3,
+      TILE_SIZE_WEB_APP / 6,
+      TILE_SIZE_WEB_APP / 6
     );
     // Bottom eye
     this.ctx.fillRect(
-      -TILE_SIZE / 8,
-      -TILE_SIZE / 12,
-      TILE_SIZE / 6,
-      TILE_SIZE / 6
+      -TILE_SIZE_WEB_APP / 8,
+      -TILE_SIZE_WEB_APP / 12,
+      TILE_SIZE_WEB_APP / 6,
+      TILE_SIZE_WEB_APP / 6
     );
 
     // Draw pupils (black) - vertically aligned
     this.ctx.fillStyle = 'black';
     // Top pupil
     this.ctx.fillRect(
-      -TILE_SIZE / 8,
-      -TILE_SIZE / 3,
-      TILE_SIZE / 12,
-      TILE_SIZE / 12
+      -TILE_SIZE_WEB_APP / 8,
+      -TILE_SIZE_WEB_APP / 3,
+      TILE_SIZE_WEB_APP / 12,
+      TILE_SIZE_WEB_APP / 12
     );
     // Bottom pupil
     this.ctx.fillRect(
-      -TILE_SIZE / 8,
-      -TILE_SIZE / 12,
-      TILE_SIZE / 12,
-      TILE_SIZE / 12
+      -TILE_SIZE_WEB_APP / 8,
+      -TILE_SIZE_WEB_APP / 12,
+      TILE_SIZE_WEB_APP / 12,
+      TILE_SIZE_WEB_APP / 12
     );
 
     // Draw tongue if in animation frame
     if (this.headAnimation) {
       this.ctx.fillStyle = 'red';
-      this.ctx.fillRect(TILE_SIZE / 2 - 2, 0, TILE_SIZE / 4, TILE_SIZE / 4);
+      this.ctx.fillRect(
+        TILE_SIZE_WEB_APP / 2 - 2,
+        0,
+        TILE_SIZE_WEB_APP / 4,
+        TILE_SIZE_WEB_APP / 4
+      );
     }
 
     this.ctx.restore();
@@ -269,9 +287,9 @@ export class SnakeGame extends GameEngine {
     this.ctx.fillStyle = this.colors.food;
     this.ctx.beginPath();
     this.ctx.arc(
-      this.food.x + TILE_SIZE / 2,
-      this.food.y + TILE_SIZE / 2,
-      TILE_SIZE / 2,
+      this.food.x + TILE_SIZE_WEB_APP / 2,
+      this.food.y + TILE_SIZE_WEB_APP / 2,
+      TILE_SIZE_WEB_APP / 2,
       0,
       Math.PI * 2
     );
@@ -279,7 +297,12 @@ export class SnakeGame extends GameEngine {
 
     // Draw stem
     this.ctx.fillStyle = 'rgba(0, 100, 0, 100%)'; // Dark green
-    this.ctx.fillRect(this.food.x + TILE_SIZE / 2 - 2, this.food.y, 4, 5);
+    this.ctx.fillRect(
+      this.food.x + TILE_SIZE_WEB_APP / 2 - 2,
+      this.food.y,
+      4,
+      5
+    );
   }
 
   private renderGameOver(): void {
@@ -326,27 +349,27 @@ export class SnakeGame extends GameEngine {
 
     switch (this.direction) {
       case DIR_RIGHT:
-        newHeadX += TILE_SIZE;
+        newHeadX += TILE_SIZE_WEB_APP;
         break;
       case DIR_LEFT:
-        newHeadX -= TILE_SIZE;
+        newHeadX -= TILE_SIZE_WEB_APP;
         break;
       case DIR_UP:
-        newHeadY -= TILE_SIZE;
+        newHeadY -= TILE_SIZE_WEB_APP;
         break;
       case DIR_DOWN:
-        newHeadY += TILE_SIZE;
+        newHeadY += TILE_SIZE_WEB_APP;
         break;
     }
 
     // Wrap around screen borders
     if (newHeadX >= this.canvas.width - BORDER_OFFSET) newHeadX = BORDER_OFFSET;
     if (newHeadX < BORDER_OFFSET)
-      newHeadX = this.canvas.width - BORDER_OFFSET - TILE_SIZE;
+      newHeadX = this.canvas.width - BORDER_OFFSET - TILE_SIZE_WEB_APP;
     if (newHeadY >= this.canvas.height - BORDER_OFFSET)
       newHeadY = GAME_AREA_TOP;
     if (newHeadY < GAME_AREA_TOP)
-      newHeadY = this.canvas.height - BORDER_OFFSET - TILE_SIZE;
+      newHeadY = this.canvas.height - BORDER_OFFSET - TILE_SIZE_WEB_APP;
 
     // Update body segments (move each segment to position of segment in front)
     let prevX = this.headX;
@@ -371,8 +394,8 @@ export class SnakeGame extends GameEngine {
 
   private checkFoodCollision(): void {
     if (
-      Math.abs(this.headX - this.food.x) < TILE_SIZE &&
-      Math.abs(this.headY - this.food.y) < TILE_SIZE
+      Math.abs(this.headX - this.food.x) < TILE_SIZE_WEB_APP &&
+      Math.abs(this.headY - this.food.y) < TILE_SIZE_WEB_APP
     ) {
       // Grow snake
       this.length++;
@@ -400,8 +423,8 @@ export class SnakeGame extends GameEngine {
     // Check collision with self
     for (let i = 1; i < this.length; i++) {
       if (
-        Math.abs(this.headX - this.body[i].x) < TILE_SIZE / 2 &&
-        Math.abs(this.headY - this.body[i].y) < TILE_SIZE / 2
+        Math.abs(this.headX - this.body[i].x) < TILE_SIZE_WEB_APP / 2 &&
+        Math.abs(this.headY - this.body[i].y) < TILE_SIZE_WEB_APP / 2
       ) {
         // Collision detected
         this.gameState.lives--;
@@ -434,7 +457,7 @@ export class SnakeGame extends GameEngine {
     // Reset body
     this.body = [
       {
-        x: this.headX - TILE_SIZE,
+        x: this.headX - TILE_SIZE_WEB_APP,
         y: this.headY,
       },
     ];
@@ -446,16 +469,16 @@ export class SnakeGame extends GameEngine {
   private spawnFood(): void {
     // Find bounds to spawn food while maintaining distance from borders
     const minX = BORDER_OFFSET + 5;
-    const maxX = this.canvas.width - BORDER_OFFSET - TILE_SIZE - 5;
+    const maxX = this.canvas.width - BORDER_OFFSET - TILE_SIZE_WEB_APP - 5;
     const minY = GAME_AREA_TOP + 5;
-    const maxY = this.canvas.height - BORDER_OFFSET - TILE_SIZE - 5;
+    const maxY = this.canvas.height - BORDER_OFFSET - TILE_SIZE_WEB_APP - 5;
 
     // Align to tile grid
-    const gridX = Math.floor((maxX - minX) / TILE_SIZE);
-    const gridY = Math.floor((maxY - minY) / TILE_SIZE);
+    const gridX = Math.floor((maxX - minX) / TILE_SIZE_WEB_APP);
+    const gridY = Math.floor((maxY - minY) / TILE_SIZE_WEB_APP);
 
-    let newFoodX = minX + Math.floor(Math.random() * gridX) * TILE_SIZE;
-    let newFoodY = minY + Math.floor(Math.random() * gridY) * TILE_SIZE;
+    let newFoodX = minX + Math.floor(Math.random() * gridX) * TILE_SIZE_WEB_APP;
+    let newFoodY = minY + Math.floor(Math.random() * gridY) * TILE_SIZE_WEB_APP;
 
     // Ensure food doesn't spawn on snake
     let collision;
@@ -464,8 +487,8 @@ export class SnakeGame extends GameEngine {
 
       // Check collision with head
       if (
-        Math.abs(newFoodX - this.headX) < TILE_SIZE &&
-        Math.abs(newFoodY - this.headY) < TILE_SIZE
+        Math.abs(newFoodX - this.headX) < TILE_SIZE_WEB_APP &&
+        Math.abs(newFoodY - this.headY) < TILE_SIZE_WEB_APP
       ) {
         collision = true;
       }
@@ -473,8 +496,8 @@ export class SnakeGame extends GameEngine {
       // Check collision with body
       for (let i = 0; i < this.length; i++) {
         if (
-          Math.abs(newFoodX - this.body[i].x) < TILE_SIZE &&
-          Math.abs(newFoodY - this.body[i].y) < TILE_SIZE
+          Math.abs(newFoodX - this.body[i].x) < TILE_SIZE_WEB_APP &&
+          Math.abs(newFoodY - this.body[i].y) < TILE_SIZE_WEB_APP
         ) {
           collision = true;
           break;
@@ -482,8 +505,8 @@ export class SnakeGame extends GameEngine {
       }
 
       if (collision) {
-        newFoodX = minX + Math.floor(Math.random() * gridX) * TILE_SIZE;
-        newFoodY = minY + Math.floor(Math.random() * gridY) * TILE_SIZE;
+        newFoodX = minX + Math.floor(Math.random() * gridX) * TILE_SIZE_WEB_APP;
+        newFoodY = minY + Math.floor(Math.random() * gridY) * TILE_SIZE_WEB_APP;
       }
     } while (collision);
 

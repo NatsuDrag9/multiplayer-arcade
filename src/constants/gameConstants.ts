@@ -1,12 +1,13 @@
 import { GameColors } from '@/definitions/gameEngineTypes';
 
 // Game constants
-export const TILE_SIZE = 24;
+export const TILE_SIZE_BASE = 8; // Base constraint: All TILE_SIZE values must be multiples of 8
+export const TILE_SIZE_WEB_APP = 24;
 export const BORDER_OFFSET = 20;
 export const GAME_AREA_TOP = 60;
 export const BASE_SPEED = 500; // Base speed in ms
-export const BOARD_WIDTH = 320; // Match LCD ILI9341 width
-export const BOARD_HEIGHT = 240; // Match LCD ILI9341 height
+export const BOARD_WIDTH = 40;
+export const BOARD_HEIGHT = 30;
 export const MAX_PLAYERS_IN_SESSION = 2; // Max players per session
 export const TARGET_SCORE = 100;
 
