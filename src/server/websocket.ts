@@ -10,14 +10,11 @@ import {
   handleChatMessage,
   handleCommand,
   handleGameData,
+  handleTileSizeValidation,
   sendMessage,
 } from './lib/helperFunctions';
 import { Client } from '@/definitions/gameSessionTypes';
-import {
-  assignPlayerToSession,
-  gameSessions,
-  getSessionStats,
-} from './lib/gameSessionManagement';
+import { gameSessions, getSessionStats } from './lib/gameSessionManagement';
 import { routeMessage } from './lib/messageRouter';
 
 // Store connected clients
@@ -37,7 +34,12 @@ export function setupWebSocketServer(wss: WebSocketServer) {
     const clientType = determineClientType(userAgent, url);
 
     // Create and store the new client
-    const client: Client = { id: clientId, ws, type: clientType };
+    const client: Client = {
+      id: clientId,
+      ws,
+      type: clientType,
+      validated: false,
+    };
     clients.set(clientId, client);
 
     console.log(`\nNew ${clientType} client connected: ${clientId}`);
@@ -62,15 +64,16 @@ export function setupWebSocketServer(wss: WebSocketServer) {
           // Check if this is the acknowledgment message
           if (message.message === 'Acknowledge game server connection') {
             console.log(
-              `Client ${clientId} acknowledged connection, assigning to session`
+              `Client ${clientId} acknowledged connection. Proceeding to tile size validation...`
             );
-            assignPlayerToSession(client);
+            // assignPlayerToSession(client);
           } else {
             console.log(
               `Connection message from ${clientId}: ${message.message}`
             );
           }
         },
+        onTileSizeValidation: handleTileSizeValidation, // player assignment happens here
       });
 
       console.log('Routing status: ', routingStatus);

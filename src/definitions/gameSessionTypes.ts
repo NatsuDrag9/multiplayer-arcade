@@ -10,6 +10,8 @@ export interface Client {
   type: ClientType;
   playerId?: number; // Assigned player ID
   gameSessionId?: string; // Which game session they're in
+  tileSize?: number; // Validated TILE_SIZE (multiple of 8)
+  validated: boolean; // Whether TILE_SIZE was accepted
 }
 
 export interface GameConfig {

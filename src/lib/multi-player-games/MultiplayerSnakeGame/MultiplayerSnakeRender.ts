@@ -3,7 +3,6 @@ import {
   Position,
   RenderConfig,
 } from '@/definitions/gameEngineTypes';
-import { TILE_SIZE } from '@/constants/gameConstants';
 import {
   GameStats,
   MultiplayerPlayerState,
@@ -22,11 +21,21 @@ export class MultiplayerSnakeRenderer {
     height: number;
   } | null = null;
   private boundHandleCanvasClick: (event: MouseEvent) => void; // Store the bound function reference
+  private deviceTileSize: number;
 
-  constructor(canvas: HTMLCanvasElement, config: RenderConfig) {
+  constructor(
+    canvas: HTMLCanvasElement,
+    config: RenderConfig,
+    deviceTileSize: number
+  ) {
     this.canvas = canvas;
+    // Set canvas dimensions
+    this.canvas.width = config.boardWidth * deviceTileSize;
+    this.canvas.height = config.boardHeight * deviceTileSize;
+
     this.ctx = canvas.getContext('2d')!;
     this.config = config;
+    this.deviceTileSize = deviceTileSize;
 
     // Set up canvas for pixel-perfect rendering
     this.ctx.imageSmoothingEnabled = false;
@@ -258,6 +267,7 @@ export class MultiplayerSnakeRenderer {
     this.renderPlayerColor(localPlayerId === 1, 8 + textWidth + 15, 12, 6);
   }
 
+  // FIX: Render players with client prediction
   private renderPlayers(
     players: MultiplayerPlayerState[],
     localPlayerId: number,
@@ -268,9 +278,27 @@ export class MultiplayerSnakeRenderer {
 
       const isLocalPlayer = player.playerId === localPlayerId;
 
-      // Use predicted state for local player if available
+      // FIX: Use predicted state for local player if available, otherwise use server state
       const renderPlayer =
         isLocalPlayer && predictedPlayer ? predictedPlayer : player;
+
+      // Show prediction indicator for debugging
+      if (isLocalPlayer && predictedPlayer && this.config.showDebugInfo) {
+        const serverPlayer = player;
+        const driftX = Math.abs(predictedPlayer.x - serverPlayer.x);
+        const driftY = Math.abs(predictedPlayer.y - serverPlayer.y);
+
+        if (driftX > 0 || driftY > 0) {
+          // Draw server position as ghost
+          this.ctx.fillStyle = 'rgba(255, 255, 0, 0.3)';
+          this.ctx.fillRect(
+            serverPlayer.x,
+            serverPlayer.y,
+            this.deviceTileSize,
+            this.deviceTileSize
+          );
+        }
+      }
 
       // Player colors
       const headColor = isLocalPlayer
@@ -285,79 +313,87 @@ export class MultiplayerSnakeRenderer {
       this.ctx.fillStyle = bodyColor;
       renderPlayer.body.forEach((segment, index) => {
         if (index === 0) return; // Skip head
-        this.ctx.fillRect(segment.x, segment.y, TILE_SIZE, TILE_SIZE);
+        this.ctx.fillRect(
+          segment.x,
+          segment.y,
+          this.deviceTileSize,
+          this.deviceTileSize
+        );
       });
 
       // Render head
       this.ctx.fillStyle = headColor;
-      this.ctx.fillRect(renderPlayer.x, renderPlayer.y, TILE_SIZE, TILE_SIZE);
+      this.ctx.fillRect(
+        renderPlayer.x,
+        renderPlayer.y,
+        this.deviceTileSize,
+        this.deviceTileSize
+      );
 
-      // Draw eyes (white) - vertically aligned
+      // FIX: Draw prediction border for local player
+      if (isLocalPlayer && predictedPlayer && this.config.showDebugInfo) {
+        this.ctx.strokeStyle = '#00ff00'; // Green border for prediction
+        this.ctx.lineWidth = 1;
+        this.ctx.strokeRect(
+          renderPlayer.x,
+          renderPlayer.y,
+          this.deviceTileSize,
+          this.deviceTileSize
+        );
+      }
+
+      // Draw eyes (white) - relative to head position
       this.ctx.fillStyle = 'white';
+      const eyeSize = this.deviceTileSize / 6;
+      const eyeOffset = this.deviceTileSize / 8;
+
       // Top eye
       this.ctx.fillRect(
-        -TILE_SIZE / 8,
-        -TILE_SIZE / 3,
-        TILE_SIZE / 6,
-        TILE_SIZE / 6
+        renderPlayer.x + eyeOffset,
+        renderPlayer.y + eyeOffset,
+        eyeSize,
+        eyeSize
       );
       // Bottom eye
       this.ctx.fillRect(
-        -TILE_SIZE / 8,
-        -TILE_SIZE / 12,
-        TILE_SIZE / 6,
-        TILE_SIZE / 6
+        renderPlayer.x + eyeOffset,
+        renderPlayer.y + this.deviceTileSize - eyeOffset - eyeSize,
+        eyeSize,
+        eyeSize
       );
 
-      // Draw pupils (black) - vertically aligned
+      // Draw pupils (black) - relative to head position
       this.ctx.fillStyle = 'black';
+      const pupilSize = eyeSize / 2;
+
       // Top pupil
       this.ctx.fillRect(
-        -TILE_SIZE / 8,
-        -TILE_SIZE / 3,
-        TILE_SIZE / 12,
-        TILE_SIZE / 12
+        renderPlayer.x + eyeOffset + pupilSize / 2,
+        renderPlayer.y + eyeOffset + pupilSize / 2,
+        pupilSize,
+        pupilSize
       );
       // Bottom pupil
       this.ctx.fillRect(
-        -TILE_SIZE / 8,
-        -TILE_SIZE / 12,
-        TILE_SIZE / 12,
-        TILE_SIZE / 12
+        renderPlayer.x + eyeOffset + pupilSize / 2,
+        renderPlayer.y +
+          this.deviceTileSize -
+          eyeOffset -
+          eyeSize +
+          pupilSize / 2,
+        pupilSize,
+        pupilSize
       );
-
-      // // Player number indicator
-      // this.ctx.fillStyle = 'white';
-      // this.ctx.font = '8px monospace';
-      // this.ctx.textAlign = 'center';
-      // this.ctx.fillText(
-      //   player.playerId.toString(),
-      //   renderPlayer.x + TILE_SIZE / 2,
-      //   renderPlayer.y + TILE_SIZE / 2 + 2
-      // );
-
-      // // Prediction indicator for local player
-      // if (isLocalPlayer && predictedPlayer) {
-      //   this.ctx.strokeStyle = 'yellow';
-      //   this.ctx.lineWidth = 1;
-      //   this.ctx.strokeRect(
-      //     renderPlayer.x - 1,
-      //     renderPlayer.y - 1,
-      //     TILE_SIZE + 2,
-      //     TILE_SIZE + 2
-      //   );
-      // }
     });
   }
-
   private renderFood(food: Position): void {
     // Draw food as an apple
     this.ctx.fillStyle = this.config.colors.food;
     this.ctx.beginPath();
     this.ctx.arc(
-      food.x + TILE_SIZE / 2,
-      food.y + TILE_SIZE / 2,
-      TILE_SIZE / 2,
+      food.x + this.deviceTileSize / 2,
+      food.y + this.deviceTileSize / 2,
+      this.deviceTileSize / 2,
       0,
       Math.PI * 2
     );
@@ -365,7 +401,7 @@ export class MultiplayerSnakeRenderer {
 
     // Draw stem
     this.ctx.fillStyle = 'rgba(0, 100, 0, 100%)'; // Dark green
-    this.ctx.fillRect(food.x + TILE_SIZE / 2 - 1, food.y, 2, 3);
+    this.ctx.fillRect(food.x + this.deviceTileSize / 2 - 1, food.y, 2, 3);
   }
 
   private renderConnectionStatus(

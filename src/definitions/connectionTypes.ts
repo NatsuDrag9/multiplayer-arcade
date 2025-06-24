@@ -4,11 +4,17 @@ export type ConnectionStatus = 'connecting' | 'connected' | 'disconnected';
 
 export type StatusMessageCardType = 'error' | 'warning' | 'info' | 'success';
 
+export type PlayerAssignmentColor = 'blue' | 'green';
+
 export type StatusMessageType =
+  | 'tile_size_response'
   | 'player_assignment'
   | 'opponent_connected'
   | 'opponent_disconnected'
   | 'session_timeout';
+
+// Server response to tile size validation
+export type TileSizeResponseType = 'tile_size_accepted' | 'tile_size_rejected';
 
 export type GameDataMessageType =
   | 'game_event'
@@ -35,6 +41,11 @@ export interface ConnectionMessage extends BaseMessage {
   type: 'connection';
   id: string;
   message: string;
+}
+
+export interface TileSizeValidationMessage extends BaseMessage {
+  type: 'tile_size_validation';
+  tileSize: number; // Must be multiple of 8
 }
 
 export interface EchoMessage extends BaseMessage {
@@ -102,7 +113,7 @@ export interface StatusMessage {
   type: 'status';
   status: StatusMessageType;
   message: string;
-  data: OpponentConnectionData | SessionTimeoutData | PlayerAssignmentData;
+  data: SessionTimeoutData | PlayerAssignmentData | TileSizeResponseType;
   timestamp?: number;
 }
 
@@ -120,6 +131,7 @@ export interface SessionStatsMessage extends BaseMessage {
 // Union type for all possible messages
 export type GameMessage =
   | ConnectionMessage
+  | TileSizeValidationMessage
   | EchoMessage
   | BroadcastMessage
   | ErrorMessage
@@ -136,16 +148,23 @@ export interface PlayerAssignmentData {
   playerId: number;
   sessionId: string;
   playerCount: number;
+  color?: PlayerAssignmentColor;
 }
 
 export interface OpponentConnectionData {
   playerId: number;
   sessionId: string;
   playerCount: number;
+  color: PlayerAssignmentData;
 }
 
 export interface SessionTimeoutData {
   sessionId: string;
+}
+
+export interface TileSizeValidation {
+  valid: boolean;
+  reason?: string;
 }
 
 // Type guards for message types
@@ -169,12 +188,33 @@ export function isErrorMessage(message: GameMessage): message is ErrorMessage {
   return message.type === 'error';
 }
 
+// Simple tile size validation
+export function validateTileSize(tileSize: number): TileSizeValidation {
+  if (!Number.isInteger(tileSize) || tileSize <= 0) {
+    return { valid: false, reason: 'TILE_SIZE must be a positive integer' };
+  }
+
+  if (tileSize % 8 !== 0) {
+    return {
+      valid: false,
+      reason: `TILE_SIZE must be multiple of 8, got ${tileSize}`,
+    };
+  }
+
+  return { valid: true };
+}
+
 // Message handler interface for type safety
 export interface MessageHandlers {
   onCommand?: (message: CommandMessage, clientId: string) => void;
   onGameData?: (message: GameDataMessage, clientId: string) => void;
   onChat?: (message: ChatMessage, clientId: string) => void;
   onConnection?: (message: ConnectionMessage, clientId: string) => void;
+  onTileSizeValidation?: (
+    message: TileSizeValidationMessage | null,
+    validation: TileSizeValidation,
+    clientId: string
+  ) => void;
   onStatus?: (message: StatusMessage, clientId: string) => void;
   onClientList?: (message: ClientListMessage, clientId: string) => void;
   onSessionStats?: (message: SessionStatsMessage, clientId: string) => void;

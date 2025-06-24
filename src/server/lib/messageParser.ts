@@ -12,6 +12,9 @@ import {
   isGameDataMessage,
   isCommandMessage,
   isChatMessage,
+  TileSizeValidationMessage,
+  validateTileSize,
+  TileSizeValidation,
 } from '../../definitions/connectionTypes';
 import { decode } from '@msgpack/msgpack';
 import WebSocket from 'ws';
@@ -244,6 +247,21 @@ export function parseConnectionMessage(
   }
 
   return message as ConnectionMessage;
+}
+
+export function parseTileSizeValidationMessage(
+  message: TileSizeValidationMessage
+): {
+  validation: TileSizeValidation;
+  message: TileSizeValidationMessage | null;
+} {
+  // Validate tile size
+  const validation = validateTileSize(message.tileSize);
+
+  return {
+    validation,
+    message: validation.valid ? message : null,
+  };
 }
 
 export function parseStatusMessage(message: GameMessage): StatusMessage | null {

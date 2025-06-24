@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign */
 import { GamePhase, Position } from '@/definitions/gameEngineTypes';
-import { logInDev } from '@/utils/logUtils';
+import { logErrorInDev, logInDev } from '@/utils/logUtils';
 import {
   GameStats,
   MultiplayerGameConfig,
@@ -12,7 +12,6 @@ import {
   DIR_RIGHT,
   DIR_UP,
   SNAKE_GAME_OPPOSITES,
-  TILE_SIZE,
 } from '@/constants/gameConstants';
 
 export class MultiplayerSnakeCore {
@@ -26,31 +25,131 @@ export class MultiplayerSnakeCore {
   private localPlayerId: number;
   private clientId: string;
 
-  // Client-side prediction
-  private predictedLocalPlayer: MultiplayerPlayerState | null = null;
-  private pendingInputs: Array<{ direction: number; timestamp: number }> = [];
-  private lastInputTime: number = 0;
-  private lastProcessedSequence: number = 0; // Track last processed sequence to handle out-of-order messages
+  // Device info
+  private deviceTileSize: number;
+
+  // Movement System - Pure server dependency
+  private movementInterval?: NodeJS.Timeout;
+  private lastProcessedSequence: number = 0;
+  private lastServerReconciliation: number = 0;
 
   constructor(
     localPlayerId: number,
     clientId: string,
-    config: MultiplayerGameConfig
+    config: MultiplayerGameConfig,
+    deviceTileSize: number
   ) {
     this.localPlayerId = localPlayerId;
     this.clientId = clientId;
     this.config = config;
+    this.deviceTileSize = deviceTileSize;
+
+    // Validate device tile size
+    if (deviceTileSize % 8 !== 0) {
+      throw new Error(
+        `Device TILE_SIZE must be multiple of 8, got ${deviceTileSize}`
+      );
+    }
 
     logInDev(`MultiplayerSnakeCore initialized for Player ${localPlayerId}`);
+  }
+
+  // All players move based on server events
+  public startMovementSimulation(): void {
+    if (this.movementInterval) {
+      clearInterval(this.movementInterval);
+    }
+
+    // Move all players at same rate as server (100ms)
+    this.movementInterval = setInterval(() => {
+      this.moveAllPlayersLocally();
+    }, 100);
+
+    logInDev('Movement simulation started for all players');
+  }
+
+  public stopMovementSimulation(): void {
+    if (this.movementInterval) {
+      clearInterval(this.movementInterval);
+      this.movementInterval = undefined;
+    }
+    logInDev('Movement simulation stopped');
+  }
+
+  // Move all players locally using identical server logic
+  private moveAllPlayersLocally(): void {
+    if (this.gamePhase !== 'playing') return;
+
+    this.players.forEach((player) => {
+      if (player.alive) {
+        this.movePlayerLocally(player);
+      }
+    });
+  }
+
+  // Shared movement logic - identical to server
+  private movePlayerLocally(player: MultiplayerPlayerState): void {
+    const oldX = player.x;
+    const oldY = player.y;
+
+    // Move based on direction using device tile size
+    switch (player.direction) {
+      case DIR_UP:
+        player.y -= this.deviceTileSize;
+        break;
+      case DIR_RIGHT:
+        player.x += this.deviceTileSize;
+        break;
+      case DIR_DOWN:
+        player.y += this.deviceTileSize;
+        break;
+      case DIR_LEFT:
+        player.x -= this.deviceTileSize;
+        break;
+    }
+
+    // Handle wall wrapping using device coordinates
+    const maxX = this.config.boardWidth * this.deviceTileSize;
+    const maxY = this.config.boardHeight * this.deviceTileSize;
+
+    let wrapped = false;
+
+    if (player.x < 0) {
+      player.x = maxX - this.deviceTileSize;
+      wrapped = true;
+    } else if (player.x >= maxX) {
+      player.x = 0;
+      wrapped = true;
+    }
+
+    if (player.y < 0) {
+      player.y = maxY - this.deviceTileSize;
+      wrapped = true;
+    } else if (player.y >= maxY) {
+      player.y = 0;
+      wrapped = true;
+    }
+
+    // Update body - add new head, remove tail if needed
+    player.body.unshift({ x: player.x, y: player.y });
+    if (player.body.length > player.length) {
+      player.body.pop();
+    }
+
+    if (wrapped) {
+      logInDev(
+        `Player ${player.playerId} wrapped: (${oldX}, ${oldY}) → (${player.x}, ${player.y})`
+      );
+    }
   }
 
   // Game state management
   public reset(): void {
     this.players.clear();
     this.gamePhase = 'waiting';
-    this.predictedLocalPlayer = null;
-    this.pendingInputs = [];
-    this.lastInputTime = 0;
+    this.stopMovementSimulation();
+    this.lastProcessedSequence = 0;
+    this.lastServerReconciliation = 0;
     this.food = { x: 0, y: 0 };
 
     logInDev('Game state reset');
@@ -62,6 +161,12 @@ export class MultiplayerSnakeCore {
 
     if (oldPhase !== phase) {
       logInDev(`Game phase changed: ${oldPhase} → ${phase}`);
+
+      if (phase === 'playing') {
+        this.startMovementSimulation();
+      } else {
+        this.stopMovementSimulation();
+      }
     }
   }
 
@@ -85,7 +190,7 @@ export class MultiplayerSnakeCore {
     this.config = config;
   }
 
-  // Player management
+  // Player management - Only handle non-movement data
   public updatePlayer(
     playerId: number,
     playerData: Partial<MultiplayerPlayerState>
@@ -93,28 +198,42 @@ export class MultiplayerSnakeCore {
     const existingPlayer = this.players.get(playerId);
 
     if (existingPlayer) {
-      // Update existing player
-      const updatedPlayer = { ...existingPlayer, ...playerData };
-      updatedPlayer.body = this.generateBodyFromHead(updatedPlayer);
-      this.players.set(playerId, updatedPlayer);
+      // Update existing player - only non-movement data
+      Object.assign(existingPlayer, playerData);
+
+      // Adjust body length if needed (without changing positions)
+      if (existingPlayer.body.length > existingPlayer.length) {
+        existingPlayer.body = existingPlayer.body.slice(
+          0,
+          existingPlayer.length
+        );
+      }
     } else {
-      // Create new player
+      // Create new player with default starting position
+      const startX =
+        playerId === 1
+          ? 2 * this.deviceTileSize
+          : this.config.boardWidth * this.deviceTileSize - 20;
+      const startY =
+        playerId === 1
+          ? 2 * this.deviceTileSize
+          : this.config.boardHeight * this.deviceTileSize - 20;
+
       const newPlayer: MultiplayerPlayerState = {
         id: `player${playerId}`,
         playerId,
-        x: 0,
-        y: 0,
-        direction: DIR_RIGHT,
+        x: startX,
+        y: startY,
+        direction: playerId === 1 ? DIR_RIGHT : DIR_LEFT,
         length: 1,
-        body: [],
+        body: [{ x: startX, y: startY }],
         alive: true,
         score: 0,
         ...playerData,
       };
-      newPlayer.body = this.generateBodyFromHead(newPlayer);
-      this.players.set(playerId, newPlayer);
 
-      logInDev(`Player ${playerId} added/updated`);
+      this.players.set(playerId, newPlayer);
+      logInDev(`Player ${playerId} added at (${newPlayer.x}, ${newPlayer.y})`);
     }
   }
 
@@ -149,20 +268,11 @@ export class MultiplayerSnakeCore {
     return { ...this.food };
   }
 
-  // Input handling and prediction
+  // Input validation - still needed for client-side validation
   public canChangeDirection(newDirection: number): boolean {
-    logInDev(
-      `canChangeDirection called: newDirection=${newDirection}, localPlayerId=${this.localPlayerId}`
-    );
-
     const localPlayer = this.getLocalPlayer();
     if (!localPlayer) {
-      logInDev(
-        `canChangeDirection: No local player found for ID ${this.localPlayerId}`
-      );
-      logInDev(
-        `Available players: ${Array.from(this.players.keys()).join(', ')}`
-      );
+      logInDev('canChangeDirection: No local player found');
       return false;
     }
 
@@ -171,89 +281,25 @@ export class MultiplayerSnakeCore {
       return false;
     }
 
-    // Validate direction (3=up, 0=right, 3=down, 4=left)
+    // Validate direction
     if (newDirection < DIR_RIGHT || newDirection > DIR_UP) return false;
 
     // Can't reverse into self
-
     if (newDirection === SNAKE_GAME_OPPOSITES[localPlayer.direction])
       return false;
 
-    // Rate limiting
-    const now = Date.now();
-    if (now - this.lastInputTime < 50) return false; // Max 20 inputs/second
-
-    logInDev(
-      `canChangeDirection: ALLOWED - ${localPlayer.direction} → ${newDirection}`
-    );
     return true;
   }
 
-  public addPendingInput(direction: number): void {
-    const timestamp = Date.now();
-    this.pendingInputs.push({ direction, timestamp });
-    this.lastInputTime = timestamp;
-
-    // Keep only recent inputs (1 second window)
-    const cutoffTime = timestamp - 1000;
-    this.pendingInputs = this.pendingInputs.filter(
-      (input) => input.timestamp > cutoffTime
-    );
-
-    // Update local prediction immediately for responsiveness
-    this.updateLocalPrediction(direction);
-  }
-
-  private updateLocalPrediction(direction: number): void {
-    const localPlayer = this.getLocalPlayer();
-    if (!localPlayer) return;
-
-    if (!this.predictedLocalPlayer) {
-      this.predictedLocalPlayer = { ...localPlayer };
-    }
-
-    this.predictedLocalPlayer.direction = direction;
-  }
-
-  public getPredictedLocalPlayer(): MultiplayerPlayerState | null {
-    return this.predictedLocalPlayer ? { ...this.predictedLocalPlayer } : null;
-  }
-
-  public reconcileWithServer(): void {
-    if (!this.predictedLocalPlayer) return;
-
-    const serverPlayer = this.getLocalPlayer();
-    if (!serverPlayer) return;
-
-    // Check for significant position mismatch
-    const positionDiff =
-      Math.abs(this.predictedLocalPlayer.x - serverPlayer.x) +
-      Math.abs(this.predictedLocalPlayer.y - serverPlayer.y);
-
-    if (positionDiff > TILE_SIZE) {
-      // Snap to server state
-      this.predictedLocalPlayer = { ...serverPlayer };
-      this.pendingInputs = [];
-      logInDev('Client prediction corrected by server');
-    } else {
-      // Minor differences - smooth interpolation
-      this.predictedLocalPlayer = { ...serverPlayer };
-    }
-  }
-
-  // Data parsing from server
+  // Parse server data - only non-movement data
   public parsePlayerUpdate(data: string): void {
-    // This method now primarily handles periodic state synchronization
-    // Most real-time updates come through handleGameEvent
-
-    // Parse: "p1:x:45,y:67,len:8,alive:1;p2:x:23,y:34,len:5,alive:1;food:x:12,y:56;scores:4,7"
     const sections = data.split(';');
 
     sections.forEach((section) => {
       if (section.startsWith('p1:')) {
-        this.parsePlayerData(1, section);
+        this.parsePlayerNonMovementData(1, section);
       } else if (section.startsWith('p2:')) {
-        this.parsePlayerData(2, section);
+        this.parsePlayerNonMovementData(2, section);
       } else if (section.startsWith('food:')) {
         this.parseFoodData(section);
       } else if (section.startsWith('scores:')) {
@@ -261,33 +307,30 @@ export class MultiplayerSnakeCore {
       }
     });
 
-    // Reconcile prediction after server update
+    // Reconcile non-movement data
     this.reconcileWithServer();
   }
 
-  private parsePlayerData(playerId: number, data: string): void {
+  // Parse only non-movement data (length, alive)
+  private parsePlayerNonMovementData(playerId: number, data: string): void {
     const parts = data.split(',');
+
     const playerData: Partial<MultiplayerPlayerState> = {
-      x: this.parseValue(parts.find((p) => p.includes('x:'))) || 0,
-      y: this.parseValue(parts.find((p) => p.includes('y:'))) || 0,
-      direction:
-        this.parseValue(parts.find((p) => p.includes('dir:'))) || DIR_RIGHT,
       length: this.parseValue(parts.find((p) => p.includes('len:'))) || 1,
       alive: this.parseValue(parts.find((p) => p.includes('alive:'))) === 1,
     };
-
-    // Convert server coordinates (grid) to client coordinates (pixels)
-    if (playerData.x !== undefined) playerData.x *= TILE_SIZE;
-    if (playerData.y !== undefined) playerData.y *= TILE_SIZE;
 
     this.updatePlayer(playerId, playerData);
   }
 
   private parseFoodData(data: string): void {
     const parts = data.split(',');
+    const serverX = this.parseValue(parts.find((p) => p.includes('x:'))) || 0;
+    const serverY = this.parseValue(parts.find((p) => p.includes('y:'))) || 0;
+
     this.food = {
-      x: this.parseValue(parts.find((p) => p.includes('x:'))) || 0,
-      y: this.parseValue(parts.find((p) => p.includes('y:'))) || 0,
+      x: this.serverToDeviceCoords(serverX),
+      y: this.serverToDeviceCoords(serverY),
     };
   }
 
@@ -309,63 +352,11 @@ export class MultiplayerSnakeCore {
     return match ? parseInt(match[1]) : 0;
   }
 
-  private generateBodyFromHead(player: MultiplayerPlayerState): Position[] {
-    const body: Position[] = [];
-    for (let i = 0; i < player.length; i++) {
-      body.push({
-        x: player.x - i * TILE_SIZE,
-        y: player.y,
-      });
-    }
-    return body;
+  private serverToDeviceCoords(serverCoord: number): number {
+    return serverCoord * this.deviceTileSize;
   }
 
-  // This method is intended to mutate the player object.
-  // Hence, disabled the param no re-assign ESLint rule
-  private mutatePlayerPosition(player: MultiplayerPlayerState): void {
-    const head = { x: player.x, y: player.y };
-
-    // Move based on direction (same logic as server)
-    switch (player.direction) {
-      case DIR_UP:
-        head.y -= TILE_SIZE;
-        break;
-      case DIR_RIGHT:
-        head.x += TILE_SIZE;
-        break;
-      case DIR_DOWN:
-        head.y += TILE_SIZE;
-        break;
-      case DIR_LEFT:
-        head.x -= TILE_SIZE;
-        break;
-    }
-
-    // Update player position
-    player.x = head.x;
-    player.y = head.y;
-
-    // Update body - add new head
-    player.body.unshift({ ...head });
-
-    // Remove tail (unless we just ate food)
-    if (player.body.length > player.length) {
-      player.body.pop();
-    }
-
-    // Handle wall wrapping (same as server)
-    if (player.x < 0) player.x = (this.config.boardWidth - 1) * TILE_SIZE;
-    if (player.x >= this.config.boardWidth * TILE_SIZE) player.x = 0;
-    if (player.y < 0) player.y = (this.config.boardHeight - 1) * TILE_SIZE;
-    if (player.y >= this.config.boardHeight * TILE_SIZE) player.y = 0;
-
-    // Update body after wrapping
-    if (player.body.length > 0) {
-      player.body[0].x = player.x;
-      player.body[0].y = player.y;
-    }
-  }
-
+  // Handle direction_changed events from server
   private handleDirectionChange(
     eventData: Record<string, string | number>
   ): void {
@@ -373,9 +364,25 @@ export class MultiplayerSnakeCore {
     const direction = Number(eventData.direction);
     const sequence = Number(eventData.sequence);
 
-    if (playerId && direction !== undefined) {
-      this.handlePlayerInput(playerId, direction, sequence);
+    // Validate sequence to prevent old/duplicate inputs
+    if (sequence <= this.lastProcessedSequence) {
+      logInDev(
+        `Ignoring old sequence ${sequence} (last: ${this.lastProcessedSequence})`
+      );
+      return;
     }
+
+    this.lastProcessedSequence = sequence;
+
+    const player = this.players.get(playerId);
+    if (!player) {
+      logInDev(`Player ${playerId} not found for direction change`);
+      return;
+    }
+
+    // Apply direction change immediately
+    player.direction = direction;
+    logInDev(`Player ${playerId} direction changed to ${direction}`);
   }
 
   private handleFoodEaten(eventData: Record<string, string | number>): void {
@@ -383,24 +390,24 @@ export class MultiplayerSnakeCore {
     const player = this.players.get(playerId);
 
     if (player) {
-      // Increase snake length
       player.length++;
       player.score++;
 
-      // Generate new food position (if provided by server)
+      // Update food position
       if (
         eventData.newFoodX !== undefined &&
         eventData.newFoodY !== undefined
       ) {
+        const serverX = Number(eventData.newFoodX);
+        const serverY = Number(eventData.newFoodY);
+
         this.setFood({
-          x: Number(eventData.newFoodX) * TILE_SIZE,
-          y: Number(eventData.newFoodY) * TILE_SIZE,
+          x: this.serverToDeviceCoords(serverX),
+          y: this.serverToDeviceCoords(serverY),
         });
       }
 
-      logInDev(
-        `Player ${playerId} ate food, new length: ${player.length}, score: ${player.score}`
-      );
+      logInDev(`Player ${playerId} ate food, new length: ${player.length}`);
     }
   }
 
@@ -415,79 +422,83 @@ export class MultiplayerSnakeCore {
     }
   }
 
-  // Game events
+  // Game events handler
   public handleGameEvent(eventData: string): void {
-    logInDev('Event data: ', eventData);
-
     try {
-      // Parse the JSON string to extract event data
       const parsedEvent: Record<string, string | number> =
         JSON.parse(eventData);
       const eventType = parsedEvent.event;
 
-      // Use switch case based on event type
       switch (eventType) {
+        case 'direction_changed':
+          this.handleDirectionChange(parsedEvent);
+          break;
+
         case 'food_eaten':
-          logInDev('Food eaten by player: ', parsedEvent.playerId);
           this.handleFoodEaten(parsedEvent);
           break;
 
         case 'collision':
-          logInDev('Player collision: ', parsedEvent);
-          logInDev('Collision cause: ', parsedEvent.cause);
           this.handleCollision(parsedEvent);
           break;
 
-        case 'direction_changed':
-          logInDev(
-            'Direction changed for player: ',
-            parsedEvent,
-            'New direction: ',
-            parsedEvent.direction
-          );
-          this.handleDirectionChange(parsedEvent);
-          break;
-
         default:
-          logInDev('Unknown event type: ', eventType);
+          logInDev('Unknown event type:', eventType);
           break;
       }
     } catch (error) {
-      logInDev('Error parsing event data: ', error);
+      logErrorInDev('Error parsing event data:', error);
     }
   }
 
-  public handlePlayerInput(
-    playerId: number,
-    direction: number,
-    sequence: number
-  ): void {
-    // Ensure inputs are processed in server order
-    if (sequence <= this.lastProcessedSequence) {
-      logInDev(
-        `Ignoring old input sequence ${sequence} (last: ${this.lastProcessedSequence})`
-      );
-      return;
-    }
-
-    this.lastProcessedSequence = sequence;
-
-    const player = this.players.get(playerId);
-    if (!player) {
-      logInDev(`handlePlayerInput: Player ${playerId} not found`);
-      return;
-    }
-
-    // Apply the direction change
-    player.direction = direction;
-    // Simulate the movement
-    this.mutatePlayerPosition(player);
-
+  // Server reconciliation - only for non-movement data
+  public reconcileWithServer(): void {
+    const now = Date.now();
     logInDev(
-      `Player ${playerId} direction changed to ${direction}, sequence: ${sequence}`
+      `[RECONCILIATION] Non-movement data sync (${now - this.lastServerReconciliation}ms since last)`
     );
-  }
+    this.lastServerReconciliation = now;
 
+    // Check for discrepancies in non-movement data between local and server state
+    this.players.forEach((player, playerId) => {
+      // Log current player state for debugging
+      logInDev(
+        `[RECONCILIATION] Player ${playerId}: length=${player.length}, alive=${player.alive}, score=${player.score}`
+      );
+
+      // Adjust body length if it doesn't match the length property
+      if (player.body.length !== player.length) {
+        if (player.body.length > player.length) {
+          // Trim excess body segments
+          player.body = player.body.slice(0, player.length);
+          logInDev(
+            `[RECONCILIATION] Trimmed Player ${playerId} body to ${player.length} segments`
+          );
+        } else if (
+          player.body.length < player.length &&
+          player.body.length > 0
+        ) {
+          // Add missing body segments behind the current body
+          const lastSegment = player.body[player.body.length - 1];
+          while (player.body.length < player.length) {
+            // Add segments at the same position as the tail (they'll spread out naturally with movement)
+            player.body.push({ x: lastSegment.x, y: lastSegment.y });
+          }
+          logInDev(
+            `[RECONCILIATION] Extended Player ${playerId} body to ${player.length} segments`
+          );
+        }
+      }
+
+      // Validate alive status consistency
+      if (!player.alive && player.body.length > 0) {
+        logInDev(
+          `[RECONCILIATION] Player ${playerId} is dead but still has body segments`
+        );
+        // Keep the body for visual purposes (dead snake remains visible)
+      }
+    });
+  }
   // Utility methods
   public getLocalPlayerScore(): number {
     const localPlayer = this.getLocalPlayer();
@@ -496,7 +507,7 @@ export class MultiplayerSnakeCore {
 
   public setLocalPlayerId(playerId: number): void {
     this.localPlayerId = playerId;
-    logInDev(`Local player ID in SnakeCore updated to: ${playerId}`);
+    logInDev(`Local player ID updated to: ${playerId}`);
   }
 
   public isLocalPlayerAlive(): boolean {
@@ -515,5 +526,11 @@ export class MultiplayerSnakeCore {
       p2Lives: player2?.alive ? 1 : 0,
       targetScore: this.config.targetScore,
     };
+  }
+
+  // Remove prediction methods - no longer needed
+  public getPredictedLocalPlayer(): MultiplayerPlayerState | null {
+    // Return the actual local player since we no longer do prediction
+    return this.getLocalPlayer() || null;
   }
 }

@@ -7,6 +7,7 @@ import {
   StatusMessage,
   PlayerAssignmentData,
   ChatMessage,
+  TileSizeValidationMessage,
 } from '@/definitions/connectionTypes';
 import { logErrorInDev, logInDev } from '@/utils/logUtils';
 
@@ -29,6 +30,7 @@ export class MultiplayerSnakeNetwork {
   private ws: WebSocket | null = null;
   private config: NetworkConfig;
   private callbacks: NetworkEventCallbacks;
+  private deviceTileSize: number;
 
   // Connection state
   private connectionStatus: ConnectionStatus = 'disconnected';
@@ -45,10 +47,23 @@ export class MultiplayerSnakeNetwork {
   // Client info - assigned via websocket messages from backend
   private clientId!: string;
   private playerId!: number;
+  private tileSizeValidated: boolean = false;
 
-  constructor(config: NetworkConfig, callbacks: NetworkEventCallbacks = {}) {
+  constructor(
+    config: NetworkConfig,
+    callbacks: NetworkEventCallbacks = {},
+    deviceTileSize: number
+  ) {
     this.config = config;
     this.callbacks = callbacks;
+    this.deviceTileSize = deviceTileSize;
+
+    // Validate tile size locally first
+    if (deviceTileSize % 8 !== 0) {
+      throw new Error(
+        `Invalid TILE_SIZE: ${deviceTileSize}. Must be multiple of 8.`
+      );
+    }
 
     logInDev(`NetworkManager initialized with URL: ${config.websocketUrl}`);
   }
@@ -181,6 +196,18 @@ export class MultiplayerSnakeNetwork {
     logInDev('Game state requested');
   }
 
+  // Send tile size for server validation
+  private sendTileSizeValidation(): void {
+    const message: TileSizeValidationMessage = {
+      type: 'tile_size_validation',
+      tileSize: this.deviceTileSize,
+      timestamp: Date.now(),
+    };
+
+    this.sendMessage(message);
+    logInDev(`Tile size validation sent: ${this.deviceTileSize}`);
+  }
+
   private sendMessage(message: GameMessage): void {
     if (!this.isConnected()) {
       logErrorInDev('Cannot send message: not connected');
@@ -298,7 +325,10 @@ export class MultiplayerSnakeNetwork {
           timestamp: Date.now(),
         };
         this.sendMessage(connectionMessage);
+        // Send tile size for validation
+        this.sendTileSizeValidation();
         logInDev('Connection handshake completed');
+
         this.callbacks.onConnected?.(message as ConnectionMessage);
         break;
 

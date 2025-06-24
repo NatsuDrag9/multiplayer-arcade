@@ -4,7 +4,6 @@ import {
   MessageHandlers,
 } from '../../definitions/connectionTypes';
 import {
-  receiveMessage,
   parseCommandMessage,
   parseGameDataMessage,
   parseChatMessage,
@@ -12,6 +11,8 @@ import {
   parseStatusMessage,
   parseClientListMessage,
   parseSessionStatsMessage,
+  receiveMessage,
+  parseTileSizeValidationMessage,
 } from './messageParser';
 import WebSocket from 'ws';
 
@@ -47,6 +48,19 @@ export function receiveAndRouteMessage(
 
   // Route to appropriate handler based on message type
   switch (message.type) {
+    case 'tile_size_validation':
+      const tileSizeValidation = parseTileSizeValidationMessage(message);
+      if (handlers.onTileSizeValidation)
+        handlers.onTileSizeValidation(
+          tileSizeValidation.message,
+          tileSizeValidation.validation,
+          clientId
+        );
+      return {
+        success: true,
+        handlerCalled: 'onTileSizeValidation',
+        messageType: message.type,
+      };
     case 'command': {
       const commandMsg = parseCommandMessage(message);
       if (commandMsg && handlers.onCommand) {

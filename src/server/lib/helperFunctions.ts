@@ -6,12 +6,24 @@ import {
   GameDataMessage,
   GameMessage,
   SessionStatsMessage,
-} from '@/definitions/connectionTypes';
+  StatusMessage,
+  TileSizeValidation,
+  TileSizeValidationMessage,
+} from '../../definitions/connectionTypes';
 import { encode } from '@msgpack/msgpack';
 import WebSocket from 'ws';
 import { clients } from '../websocket';
-import { gameSessions, getSessionStats } from './gameSessionManagement';
+import {
+  assignPlayerToSession,
+  gameSessions,
+  getSessionStats,
+} from './gameSessionManagement';
 import { GameSession } from '@/definitions/gameSessionTypes';
+import {
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
+  TILE_SIZE_BASE,
+} from '../../constants/gameConstants';
 
 // Determine client type based on User-Agent or URL parameters
 export function determineClientType(userAgent: string, url: URL): ClientType {
@@ -401,4 +413,104 @@ export function getDetailedServerStatus(): {
     clientsInSessions,
     clientsWithoutSessions,
   };
+}
+
+// Validation helpers
+export function isValidTileSize(tileSize: number): boolean {
+  return (
+    Number.isInteger(tileSize) &&
+    tileSize > 0 &&
+    tileSize % TILE_SIZE_BASE === 0
+  );
+}
+
+export function getMinCanvasSize(deviceTileSize: number): {
+  width: number;
+  height: number;
+} {
+  if (!isValidTileSize(deviceTileSize)) {
+    throw new Error(`Invalid device tile size: ${deviceTileSize}`);
+  }
+
+  return {
+    width: BOARD_WIDTH * deviceTileSize, // e.g., 40 * 24 = 960px
+    height: BOARD_HEIGHT * deviceTileSize, // e.g., 30 * 24 = 720px
+  };
+}
+
+// Coordinate conversion utility
+export function serverToDeviceCoords(
+  serverCoord: number,
+  deviceTileSize: number
+): number {
+  if (!isValidTileSize(deviceTileSize)) {
+    throw new Error(`Invalid device tile size: ${deviceTileSize}`);
+  }
+  return serverCoord * deviceTileSize;
+}
+
+export function deviceToServerCoords(
+  deviceCoord: number,
+  deviceTileSize: number
+): number {
+  if (!isValidTileSize(deviceTileSize)) {
+    throw new Error(`Invalid device tile size: ${deviceTileSize}`);
+  }
+  return Math.floor(deviceCoord / deviceTileSize);
+}
+
+// Handle tile size validation
+export function handleTileSizeValidation(
+  tileSizeMessage: TileSizeValidationMessage | null,
+  validation: TileSizeValidation,
+  clientId: string
+): void {
+  const client = clients.get(clientId);
+  if (!client) {
+    console.error(`Client ${clientId} not found for tile size validation`);
+    return;
+  }
+
+  let responseMessage: StatusMessage;
+
+  if (validation && tileSizeMessage) {
+    // Accept tile size
+    client.tileSize = tileSizeMessage.tileSize;
+    client.validated = true;
+
+    responseMessage = {
+      type: 'status',
+      status: 'tile_size_response',
+      message: `TILE_SIZE ${tileSizeMessage.tileSize} accepted`,
+      data: 'tile_size_accepted',
+      timestamp: Date.now(),
+    };
+
+    console.log(
+      `Client ${clientId} TILE_SIZE accepted: ${tileSizeMessage.tileSize}`
+    );
+  } else {
+    // Reject tile size
+    client.validated = false;
+
+    responseMessage = {
+      type: 'status',
+      status: 'tile_size_response',
+      message: validation.reason || 'Invalid TILE_SIZE',
+      data: 'tile_size_rejected',
+      timestamp: Date.now(),
+    };
+
+    console.log(` Client ${clientId} TILE_SIZE rejected: ${validation.reason}`);
+  }
+
+  // Send validation response
+  sendMessage(client.ws, responseMessage, client.type);
+
+  // If accepted, proceed to session assignment after a small delay
+  if (validation.valid) {
+    setTimeout(() => {
+      assignPlayerToSession(client);
+    }, 100);
+  }
 }

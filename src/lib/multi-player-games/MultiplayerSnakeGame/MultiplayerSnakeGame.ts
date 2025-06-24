@@ -1,10 +1,13 @@
 import { GameEngine } from '../../game-engine/GameEngine';
 import {
+  BOARD_HEIGHT,
+  BOARD_WIDTH,
   DEFAULT_COLORS,
   DIR_DOWN,
   DIR_LEFT,
   DIR_RIGHT,
   DIR_UP,
+  TILE_SIZE_WEB_APP,
 } from '@/constants/gameConstants';
 import {
   GameColors,
@@ -18,9 +21,8 @@ import {
   ConnectionMessage,
   StatusMessage,
   PlayerAssignmentData,
-  OpponentConnectionData,
 } from '@/definitions/connectionTypes';
-import { logInDev } from '@/utils/logUtils';
+import { logErrorInDev, logInDev } from '@/utils/logUtils';
 import { MultiplayerSnakeCore } from './MultiplayerSnakeCore';
 import {
   MultiplayerSnakeNetwork,
@@ -72,16 +74,19 @@ export class MultiplayerSnakeGame
     playerId: 0,
     clientId: '',
     sessionId: '',
+    // color: '',
   };
 
   private opponentPlayer = {
     playerId: 0,
     clientId: '',
     sessionId: '',
+    // color: '',
   };
 
-  // UI input from user
+  // Flags
   private isSpectator: boolean;
+  private isTileSizeValidated: boolean;
 
   // External callbacks
   private onGameOver?: () => void;
@@ -100,11 +105,12 @@ export class MultiplayerSnakeGame
     this.isSpectator = options.isSpectator || false;
     this.onGameOver = options.onGameOver;
     this.onScoreUpdate = options.onScoreUpdate;
+    this.isTileSizeValidated = false;
 
     // Initialize game config
     const gameConfig: MultiplayerGameConfig = {
-      boardWidth: 320,
-      boardHeight: 240,
+      boardWidth: BOARD_WIDTH,
+      boardHeight: BOARD_HEIGHT,
       targetScore: 0,
       maxPlayers: 2,
     };
@@ -131,13 +137,18 @@ export class MultiplayerSnakeGame
       onError: (error) => this.handleNetworkError(error),
     };
 
-    this.network = new MultiplayerSnakeNetwork(networkConfig, networkCallbacks);
+    this.network = new MultiplayerSnakeNetwork(
+      networkConfig,
+      networkCallbacks,
+      TILE_SIZE_WEB_APP
+    );
 
     // Initialize core game logic
     this.core = new MultiplayerSnakeCore(
       this.localPlayer.playerId,
       this.localPlayer.clientId,
-      gameConfig
+      gameConfig,
+      TILE_SIZE_WEB_APP
     );
 
     // Initialize renderer
@@ -149,7 +160,11 @@ export class MultiplayerSnakeGame
       onReconnectRequest: () => this.handleReconnectRequest(),
     };
 
-    this.renderer = new MultiplayerSnakeRenderer(canvas, renderConfig);
+    this.renderer = new MultiplayerSnakeRenderer(
+      canvas,
+      renderConfig,
+      TILE_SIZE_WEB_APP
+    );
 
     logInDev(
       `MultiplayerSnakeGame initialized for Player ${this.localPlayer.playerId}`
@@ -246,8 +261,8 @@ export class MultiplayerSnakeGame
     }
 
     if (newDirection !== null && this.core.canChangeDirection(newDirection)) {
-      // Add to pending inputs for prediction
-      this.core.addPendingInput(newDirection);
+      // // Add to pending inputs for prediction
+      // this.core.addPendingInput(newDirection);
 
       logInDev('Sending newDirection to server: ', newDirection);
       // Send to server
@@ -310,7 +325,7 @@ export class MultiplayerSnakeGame
         logInDev(`Player assigned ID: ${assignmentData.playerId}`);
         break;
       case 'opponent_connected':
-        const data = message.data as OpponentConnectionData;
+        const data = message.data as PlayerAssignmentData;
 
         this.opponentPlayer.playerId = data.playerId;
         this.opponentPlayer.sessionId = data.sessionId;
@@ -322,6 +337,19 @@ export class MultiplayerSnakeGame
           clientId: '',
           sessionId: '',
         };
+        break;
+      case 'tile_size_response':
+        if (message.data === 'tile_size_accepted') {
+          this.isTileSizeValidated = true;
+        } else {
+          this.isTileSizeValidated = false;
+          const errorMsg = `Server rejected TILE_SIZE: ${message.message}`;
+          logErrorInDev(errorMsg);
+
+          if (this.onGameOver) {
+            this.onGameOver();
+          }
+        }
         break;
       default:
         logInDev('Unknown status in StatusMessage', message);
@@ -341,12 +369,16 @@ export class MultiplayerSnakeGame
   }
 
   private handleGameData(message: GameDataMessage): void {
+    // logInDev('Game data: ', message.data_type, message.data);
     switch (message.data_type) {
       case 'game_event':
+        // Handle real-time events (direction_changed, food_eaten, collision)
         this.core.handleGameEvent(message.data);
         break;
 
       case 'game_state':
+        // Handle non-movement state updates (length, alive, score, food)
+
         // Check if target_score exists in the message data
         if (message.data.includes('target_score:')) {
           const match = message.data.match(/target_score:\s*(\d+)/);
@@ -357,7 +389,7 @@ export class MultiplayerSnakeGame
           }
         }
 
-        // Normal game state processing
+        // Parse non-movement game state data
         this.core.parsePlayerUpdate(message.data);
         this.updateLocalScore();
 
@@ -476,6 +508,10 @@ export class MultiplayerSnakeGame
 
   public getLocalPlayerId(): number {
     return this.localPlayer.playerId;
+  }
+
+  public getIsTileSizeValidation(): boolean {
+    return this.isTileSizeValidated;
   }
 
   public sendChatMessage(message: string): void {
