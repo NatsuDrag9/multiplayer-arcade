@@ -84,7 +84,7 @@ export function assignPlayerToSession(client: Client): void {
             playerId: playerId,
             sessionId: session.id,
             playerCount: session.players.size,
-            // color: playerId === 1 ? 'green' : 'blue',
+            color: playerId === 1 ? 'green' : 'blue',
           },
     timestamp: Date.now(),
   };
@@ -105,7 +105,7 @@ export function assignPlayerToSession(client: Client): void {
                 playerId: playerId,
                 sessionId: session.id,
                 playerCount: session.players.size,
-                // color: playerId === 1 ? 'green' : 'blue',
+                color: playerId === 1 ? 'green' : 'blue',
               },
         timestamp: Date.now(),
       };

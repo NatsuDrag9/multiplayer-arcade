@@ -7,7 +7,10 @@ import {
   GameStats,
   MultiplayerPlayerState,
 } from '@/definitions/snakeGameTypes';
-import { ConnectionStatus } from '@/definitions/connectionTypes';
+import {
+  ConnectionStatus,
+  PlayerAssignmentColor,
+} from '@/definitions/connectionTypes';
 import { logInDev } from '@/utils/logUtils';
 
 export class MultiplayerSnakeRenderer {
@@ -22,6 +25,8 @@ export class MultiplayerSnakeRenderer {
   } | null = null;
   private boundHandleCanvasClick: (event: MouseEvent) => void; // Store the bound function reference
   private deviceTileSize: number;
+  private playerOneColor = '';
+  private playerTwoColor = '';
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -123,17 +128,23 @@ export class MultiplayerSnakeRenderer {
     }
   }
 
+  public setPlayerOneColor(color: PlayerAssignmentColor) {
+    this.playerOneColor = color;
+  }
+
+  public setPlayerTwoColor(color: PlayerAssignmentColor) {
+    this.playerTwoColor = color;
+  }
+
   // Render player color
   private renderPlayerColor(
-    localPlayer: boolean,
+    isPlayerOne: boolean,
     x: number,
     y: number,
     radius: number = 8
   ) {
-    // Determine player color based on whether it's local player
-    const playerColor = localPlayer
-      ? this.config.colors.snakeHead
-      : 'rgba(0, 0, 255, 100%)'; // Blue for opponent
+    // Determine player color based on whether it's playerId
+    const playerColor = isPlayerOne ? this.playerOneColor : this.playerTwoColor;
 
     this.ctx.fillStyle = playerColor;
     this.ctx.beginPath();
@@ -267,7 +278,6 @@ export class MultiplayerSnakeRenderer {
     this.renderPlayerColor(localPlayerId === 1, 8 + textWidth + 15, 12, 6);
   }
 
-  // FIX: Render players with client prediction
   private renderPlayers(
     players: MultiplayerPlayerState[],
     localPlayerId: number,
@@ -301,11 +311,12 @@ export class MultiplayerSnakeRenderer {
       }
 
       // Player colors
-      const headColor = isLocalPlayer
+      const isPlayerOne = player.playerId === 1;
+      const headColor = isPlayerOne
         ? this.config.colors.snakeHead
         : 'rgba(0, 0, 255, 100%)'; // Blue for opponent
 
-      const bodyColor = isLocalPlayer
+      const bodyColor = isPlayerOne
         ? this.config.colors.snakeBody
         : 'rgba(0, 100, 255, 100%)'; // Darker blue for opponent body
 

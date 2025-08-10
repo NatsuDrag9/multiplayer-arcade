@@ -152,7 +152,7 @@ export interface PlayerAssignmentData {
   playerId: number;
   sessionId: string;
   playerCount: number;
-  color?: PlayerAssignmentColor;
+  color: PlayerAssignmentColor;
 }
 
 export interface OpponentConnectionData {

@@ -319,6 +319,12 @@ export class MultiplayerSnakeGame
         this.localPlayer.playerId = assignmentData.playerId;
         this.localPlayer.sessionId = assignmentData.sessionId;
 
+        if (assignmentData.playerId === 1) {
+          this.renderer.setPlayerOneColor(assignmentData.color);
+        } else {
+          this.renderer.setPlayerTwoColor(assignmentData.color);
+        }
+
         // Update the core with the real player ID
         this.core.setLocalPlayerId(assignmentData.playerId);
 
@@ -336,6 +342,12 @@ export class MultiplayerSnakeGame
 
         this.opponentPlayer.playerId = data.playerId;
         this.opponentPlayer.sessionId = data.sessionId;
+
+        if (data.playerId === 1) {
+          this.renderer.setPlayerOneColor(data.color);
+        } else {
+          this.renderer.setPlayerTwoColor(data.color);
+        }
         break;
 
       case 'opponent_disconnected':
@@ -343,6 +355,7 @@ export class MultiplayerSnakeGame
           playerId: 0,
           clientId: '',
           sessionId: '',
+          // color: '',
         };
         break;
       case 'tile_size_response':
