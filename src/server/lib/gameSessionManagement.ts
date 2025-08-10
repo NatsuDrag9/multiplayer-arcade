@@ -77,12 +77,15 @@ export function assignPlayerToSession(client: Client): void {
     type: 'status',
     status: 'player_assignment',
     message: `You are Player ${playerId}`,
-    data: {
-      playerId: playerId,
-      sessionId: session.id,
-      playerCount: session.players.size,
-      // color: playerId === 1 ? 'green' : 'blue',
-    },
+    data:
+      client.type === 'esp32'
+        ? `playerId: ${playerId}, sessionId: ${session.id}, playerCount: ${session.players.size}, color: ${playerId === 1 ? 'green' : 'blue'}`
+        : {
+            playerId: playerId,
+            sessionId: session.id,
+            playerCount: session.players.size,
+            // color: playerId === 1 ? 'green' : 'blue',
+          },
     timestamp: Date.now(),
   };
 
@@ -95,12 +98,15 @@ export function assignPlayerToSession(client: Client): void {
         type: 'status',
         status: 'opponent_connected',
         message: `Player ${playerId} joined the game`,
-        data: {
-          playerId: playerId,
-          sessionId: session.id,
-          playerCount: session.players.size,
-          // color: playerId === 1 ? 'green' : 'blue',
-        },
+        data:
+          player.type === 'esp32'
+            ? `playerId: ${playerId}, sessionId: ${session.id}, playerCount: ${session.players.size}, color: ${playerId === 1 ? 'green' : 'blue'}`
+            : {
+                playerId: playerId,
+                sessionId: session.id,
+                playerCount: session.players.size,
+                // color: playerId === 1 ? 'green' : 'blue',
+              },
         timestamp: Date.now(),
       };
       sendMessage(player.ws, newPlayerMessage, player.type);

@@ -323,6 +323,13 @@ export class MultiplayerSnakeGame
         this.core.setLocalPlayerId(assignmentData.playerId);
 
         logInDev(`Player assigned ID: ${assignmentData.playerId}`);
+
+        // Send ready signal after we have a player ID
+        if (this.localPlayer.playerId > 0 && !this.isSpectator) {
+          logInDev(`Sending player ${this.localPlayer.playerId} ready message`);
+          const config = this.core.getConfig();
+          this.network.sendPlayerReady(config.targetScore);
+        }
         break;
       case 'opponent_connected':
         const data = message.data as PlayerAssignmentData;
@@ -353,13 +360,6 @@ export class MultiplayerSnakeGame
         break;
       default:
         logInDev('Unknown status in StatusMessage', message);
-    }
-
-    // Send ready signal after we have a player ID
-    if (this.localPlayer.playerId > 0 && !this.isSpectator) {
-      logInDev(`Sending player ${this.localPlayer.playerId} ready message`);
-      const config = this.core.getConfig();
-      this.network.sendPlayerReady(config.targetScore);
     }
   }
 

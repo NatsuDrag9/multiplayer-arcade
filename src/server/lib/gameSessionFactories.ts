@@ -25,7 +25,7 @@ function createGameEventMessage(
 // Factory function for creating Snake game sessions
 export function createSnakeGameSession(): SnakeGameSession {
   const session: Partial<SnakeGameSession> = {
-    id: uuidv4(),
+    id: uuidv4().replace(/-/g, '').substring(0, 6),
     players: new Map(),
     lastUpdate: Date.now(),
   };

@@ -113,7 +113,11 @@ export interface StatusMessage {
   type: 'status';
   status: StatusMessageType;
   message: string;
-  data: SessionTimeoutData | PlayerAssignmentData | TileSizeResponseType;
+  data:
+    | SessionTimeoutData
+    | PlayerAssignmentData
+    | TileSizeResponseType
+    | string;
   timestamp?: number;
 }
 
@@ -155,7 +159,7 @@ export interface OpponentConnectionData {
   playerId: number;
   sessionId: string;
   playerCount: number;
-  color: PlayerAssignmentData;
+  color: PlayerAssignmentColor;
 }
 
 export interface SessionTimeoutData {

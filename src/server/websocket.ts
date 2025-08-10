@@ -26,7 +26,8 @@ export function setupWebSocketServer(wss: WebSocketServer) {
 
   wss.on('connection', (ws: WebSocket, request) => {
     // Generate a unique client ID using UUID
-    const clientId = uuidv4();
+    // Remove hyphens, then first 6 chars
+    const clientId = uuidv4().replace(/-/g, '').substring(0, 6);
 
     // Determine client type from User-Agent or query params
     const userAgent = request.headers['user-agent'] || '';

@@ -332,6 +332,10 @@ export class MultiplayerSnakeCore {
       x: this.serverToDeviceCoords(serverX),
       y: this.serverToDeviceCoords(serverY),
     };
+
+    logInDev(
+      `Player ${this.localPlayerId} received food at server coords ${serverX}, ${serverY}`
+    );
   }
 
   private parseScoresData(data: string): void {
@@ -454,18 +458,10 @@ export class MultiplayerSnakeCore {
   // Server reconciliation - only for non-movement data
   public reconcileWithServer(): void {
     const now = Date.now();
-    logInDev(
-      `[RECONCILIATION] Non-movement data sync (${now - this.lastServerReconciliation}ms since last)`
-    );
     this.lastServerReconciliation = now;
 
     // Check for discrepancies in non-movement data between local and server state
     this.players.forEach((player, playerId) => {
-      // Log current player state for debugging
-      logInDev(
-        `[RECONCILIATION] Player ${playerId}: length=${player.length}, alive=${player.alive}, score=${player.score}`
-      );
-
       // Adjust body length if it doesn't match the length property
       if (player.body.length !== player.length) {
         if (player.body.length > player.length) {
