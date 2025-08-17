@@ -22,6 +22,7 @@ import { GameSession } from '@/definitions/gameSessionTypes';
 import {
   BOARD_HEIGHT,
   BOARD_WIDTH,
+  DEVICE_TO_SERVER_DIR_MAP,
   TILE_SIZE_BASE,
 } from '../../constants/gameConstants';
 
@@ -184,7 +185,8 @@ export function handleCommand(
 // SECURE: Only accept player actions from clients
 export function handleGameData(
   gameMessage: GameDataMessage,
-  clientId: string
+  clientId: string,
+  clientType: ClientType
 ): void {
   const client = clients.get(clientId);
   if (!client?.gameSessionId) {
@@ -221,7 +223,11 @@ export function handleGameData(
   const directionMatch = actionData.match(/direction:(\d+)/);
 
   if (directionMatch) {
-    const newDirection = parseInt(directionMatch[1]);
+    // Use the map when the device is esp32
+    const newDirection =
+      clientType === 'esp32'
+        ? DEVICE_TO_SERVER_DIR_MAP[parseInt(directionMatch[1])]
+        : parseInt(directionMatch[1]);
 
     // Process input through authoritative game (updates session.game state internally)
     const success = session.game.processPlayerInput(client.id, newDirection);

@@ -77,7 +77,7 @@ export function receiveAndRouteMessage(
     case 'game_data_message': {
       const gameDataMsg = parseGameDataMessage(message);
       if (gameDataMsg && handlers.onGameData) {
-        handlers.onGameData(gameDataMsg, clientId);
+        handlers.onGameData(gameDataMsg, clientId, clientType);
         return {
           success: true,
           messageType: message.type,
