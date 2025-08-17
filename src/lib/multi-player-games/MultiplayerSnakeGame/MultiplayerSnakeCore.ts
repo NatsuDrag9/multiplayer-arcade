@@ -11,6 +11,7 @@ import {
   DIR_LEFT,
   DIR_RIGHT,
   DIR_UP,
+  SERVER_START_POSITIONS,
   SNAKE_GAME_OPPOSITES,
 } from '@/constants/gameConstants';
 
@@ -210,14 +211,17 @@ export class MultiplayerSnakeCore {
       }
     } else {
       // Create new player with default starting position
-      const startX =
-        playerId === 1
-          ? 2 * this.deviceTileSize
-          : this.config.boardWidth * this.deviceTileSize - 20;
-      const startY =
-        playerId === 1
-          ? 2 * this.deviceTileSize
-          : this.config.boardHeight * this.deviceTileSize - 20;
+      // const startX =
+      //   playerId === 1
+      //     ? 2 * this.deviceTileSize
+      //     : this.config.boardWidth * this.deviceTileSize - 20;
+      // const startY =
+      //   playerId === 1
+      //     ? 2 * this.deviceTileSize
+      //     : this.config.boardHeight * this.deviceTileSize - 20;
+      const serverPos = SERVER_START_POSITIONS[playerId as 1 | 2];
+      const startX = serverPos.x * this.deviceTileSize; // 2*16=32 or 37*16=592
+      const startY = serverPos.y * this.deviceTileSize; // 2*16=32 or 27*16=432
 
       const newPlayer: MultiplayerPlayerState = {
         id: `player${playerId}`,
