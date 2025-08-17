@@ -435,7 +435,7 @@ export class MultiplayerSnakeGame
         }
         break;
 
-      case 'restart':
+      case 'game_restart':
         this.resetGame();
         break;
       case 'sleep':

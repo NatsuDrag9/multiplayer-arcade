@@ -23,7 +23,7 @@ export type GameDataMessageType =
   | 'game_state';
 
 export type CommandMessageType =
-  | 'restart'
+  | 'game_restart'
   | 'sleep'
   | 'update'
   | 'game_start'
@@ -211,7 +211,11 @@ export function validateTileSize(tileSize: number): TileSizeValidation {
 // Message handler interface for type safety
 export interface MessageHandlers {
   onCommand?: (message: CommandMessage, clientId: string) => void;
-  onGameData?: (message: GameDataMessage, clientId: string) => void;
+  onGameData?: (
+    message: GameDataMessage,
+    clientId: string,
+    clientType: ClientType
+  ) => void;
   onChat?: (message: ChatMessage, clientId: string) => void;
   onConnection?: (message: ConnectionMessage, clientId: string) => void;
   onTileSizeValidation?: (

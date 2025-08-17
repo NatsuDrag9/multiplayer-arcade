@@ -146,7 +146,7 @@ export function handleCommand(
       sendMessage(client.ws, statsMessage, client.type);
       break;
 
-    case 'restart':
+    case 'game_restart':
     case 'sleep':
     case 'update':
       // Forward these commands to ESP32 clients
